@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class BaseViewModel: ViewModel(){
+abstract class BaseViewModel: ViewModel(){
     private val _loadingDialog = MutableStateFlow<Boolean>(false)
     val loadingDialog = _loadingDialog.asStateFlow()
 

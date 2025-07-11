@@ -2,7 +2,7 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.BaseAndroidViewDKTECH" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="android:forceDarkAllowed" tools:targetApi="29">false</item>
     </style>
 
     <style name="Theme.BaseAndroidViewDKTECH" parent="Base.Theme.BaseAndroidViewDKTECH" />

@@ -20,12 +20,13 @@ abstract class BaseActivity<viewBinding: ViewBinding>
         LoadingDialog(this)
     }
     abstract val viewModel: BaseViewModel
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
         window.addFlags(WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON)
         setContentView(binding.root)
-        initViewModel()
         initLoadingDialog()
         initData()
         initView()
@@ -33,8 +34,6 @@ abstract class BaseActivity<viewBinding: ViewBinding>
         initObserver()
 
     }
-
-    abstract fun initViewModel()
     abstract fun initData()
     abstract fun initView()
     abstract fun initEvent()

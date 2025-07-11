@@ -11,4 +11,5 @@ val Context.appDataStore by preferencesDataStore(
 )
 
 class MyApplication: Application() {
+
 }
