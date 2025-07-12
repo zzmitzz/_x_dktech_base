@@ -1,18 +1,17 @@
-package com.dktech.baseandroidviewdktech
+package com.dktech.baseandroidviewdktech.ui.home
 
-import android.content.Context
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.dktech.baseandroidviewdktech.base.BaseActivity
-import com.dktech.baseandroidviewdktech.base.BaseViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.dktech.baseandroidviewdktech.MainViewModel
+import com.dktech.baseandroidviewdktech.R
+import com.dktech.baseandroidviewdktech.base.BaseActivityVM
+import com.dktech.baseandroidviewdktech.base.ViewModelFactory
 import com.dktech.baseandroidviewdktech.databinding.ActivityMainBinding
 
-class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::inflate) {
-    override val viewModel: BaseViewModel
-        get() = MainViewModel()
+class MainActivity : BaseActivityVM<MainViewModel, ActivityMainBinding>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,6 +23,14 @@ class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::infl
             insets
         }
 
+    }
+
+    override fun initViewModel() {
+        viewModel = ViewModelProvider(this, ViewModelFactory())[MainViewModel::class.java]
+    }
+
+    override fun getViewBinding(): ActivityMainBinding {
+        return ActivityMainBinding.inflate(layoutInflater)
     }
 
     override fun initData() {

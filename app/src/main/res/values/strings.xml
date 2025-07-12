@@ -1,3 +1,13 @@
 <resources>
-    <string name="app_name">BaseAndroidViewDKTECH</string>
+    <string name="app_name" translatable="false">Prank: Haircut, prank call, prank sound</string>
+    <string name="this_action_contains_ads">This action contains ads</string>
+    <string name="hindi">Hindi</string>
+    <string name="english">English</string>
+    <string name="spanish">Spanish</string>
+    <string name="french">French</string>
+    <string name="arabic">Arabic</string>
+    <string name="bengali">Bengali</string>
+    <string name="languages">Select Language\n</string>
+    <string name="apply">Apply</string>
+    <string name="please_select_language_first">Please select language first</string>
 </resources>

@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "BaseAndroidViewDKTECH"
+rootProject.name = "Prank sound call"
 include(":app")
  

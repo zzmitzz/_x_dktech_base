@@ -52,4 +52,5 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.datastore.core)
     implementation(libs.glide)
+    implementation(libs.gson)
 }

@@ -6,4 +6,41 @@
     </style>
 
     <style name="Theme.BaseAndroidViewDKTECH" parent="Base.Theme.BaseAndroidViewDKTECH" />
+
+
+
+
+    <style name="mHeading">
+        <item name="android:includeFontPadding">false</item>
+    </style>
+    <style name="mHeading.P0" parent="mHeading">
+        <item name="android:fontFamily">@font/nunito_bold</item>
+        <item name="android:textSize">@dimen/sp20</item>
+    </style>
+    <style name="mHeading.P1" parent="mHeading">
+        <item name="android:fontFamily">@font/nunito_bold</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+    <style name="mHeading.P2" parent="mHeading">
+        <item name="android:fontFamily">@font/nunito_bold</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+
+    <style name="mNormalText">
+        <item name="android:includeFontPadding">false</item>
+    </style>
+    <style name="mNormalText.Heading1" parent="mNormalText">
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">@font/nunito_medium</item>
+    </style>
+    <style name="mNormalText.Heading2" parent="mNormalText">
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/nunito_medium</item>
+    </style>
+
+    <style name="mNormalText.Heading3" parent="mNormalText">
+        <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">@font/nunito_medium</item>
+    </style>
 </resources>

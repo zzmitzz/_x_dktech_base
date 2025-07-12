@@ -36,7 +36,7 @@ class PersistentStorage private constructor(context: Context) {
         @Volatile
         private var instance: PersistentStorage? = null
 
-        fun builder(context: Context): PersistentStorage {
+        fun getInstance(context: Context): PersistentStorage {
             return instance ?: synchronized(this) {
                 instance ?: PersistentStorage(context).also { instance = it }
             }
