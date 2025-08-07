@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Prank sound call"
+rootProject.name = "xDktech"
 include(":app")
  

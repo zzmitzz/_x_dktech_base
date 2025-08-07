@@ -1,4 +1,4 @@
-package com.dktech.baseandroidviewdktech.base
+package com.dktech.baseandroidviewdktech.base.dialog
 
 import android.app.Dialog
 import android.content.Context
@@ -13,7 +13,7 @@ import androidx.core.graphics.drawable.toDrawable
 class LoadingDialog(
     context: Context,
     layoutID: Int = 1
-) {
+)  {
     private var dialog: Dialog? = null
     private var run: Runnable? = null
     private var handler: Handler? = null

@@ -2,15 +2,16 @@ package com.dktech.baseandroidviewdktech.ui.language_screen
 
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.lifecycle.lifecycleScope
 import com.dktech.baseandroidviewdktech.R
 import com.dktech.baseandroidviewdktech.base.BaseActivity
 import com.dktech.baseandroidviewdktech.base.ui_models.LanguageModel
 import com.dktech.baseandroidviewdktech.base.ui_models.getLanguageList
 import com.dktech.baseandroidviewdktech.databinding.LayoutActivityLanguageBinding
-import com.dktech.baseandroidviewdktech.utils.getSelectedLanguage
-import com.dktech.baseandroidviewdktech.utils.setSafeOnClickListener
-import com.dktech.baseandroidviewdktech.utils.setSelectedLanguage
+import com.dktech.baseandroidviewdktech.utils.helper.getSelectedLanguage
+import com.dktech.baseandroidviewdktech.utils.helper.setSafeOnClickListener
+import com.dktech.baseandroidviewdktech.utils.helper.setSelectedLanguage
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
@@ -33,6 +34,12 @@ class LanguageScreenActivity :
             }
         }
     }
+    override val onBackPressedCallback: OnBackPressedCallback
+        get() = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                nextIntroActivity()
+            }
+        }
 
     override fun getViewBinding(): LayoutActivityLanguageBinding {
         return LayoutActivityLanguageBinding.inflate(layoutInflater)
@@ -78,7 +85,7 @@ class LanguageScreenActivity :
         }
     }
 
-    private fun nextIntroActivity(){
+    private fun nextIntroActivity() {
 
     }
 
