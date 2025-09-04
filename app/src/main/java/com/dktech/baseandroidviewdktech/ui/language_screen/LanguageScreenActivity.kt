@@ -26,7 +26,7 @@ class LanguageScreenActivity :
             context = this,
             languageList = getLanguageList(),
             onFirstSelect = {
-                // save selected language
+
             }
         ).apply {
             scope.launch {

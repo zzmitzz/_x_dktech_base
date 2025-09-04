@@ -47,6 +47,7 @@ class PersistentStorage private constructor(context: Context) {
         scope.launch {
             dataStore.edit {
                 it[key] = value
+                onSuccess?.invoke()
             }
         }
     }
