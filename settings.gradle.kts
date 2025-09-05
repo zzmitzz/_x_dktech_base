@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "xDktech"
+rootProject.name = "Pedometer - Step Tracker"
 include(":app")
  

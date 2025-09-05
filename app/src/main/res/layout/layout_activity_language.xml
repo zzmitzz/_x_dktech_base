@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/primary"
+    android:background="@color/black"
     android:layoutDirection="ltr">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -28,8 +28,8 @@
             android:textAlignment="viewStart"
             android:maxLines="1"
             android:ellipsize="end"
-            android:textColor="@color/black"
-            style="@style/mHeading.P0"
+            android:textColor="@color/white"
+            style="@style/mHeading.P4.Semibold"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/ivDone"
             app:layout_constraintStart_toStartOf="parent"
@@ -44,8 +44,8 @@
             android:paddingHorizontal="@dimen/dp16"
             android:paddingVertical="@dimen/dp8"
             android:text="@string/apply"
-            android:backgroundTint="@color/primaryContainer"
-            android:textColor="@color/white"
+            android:backgroundTint="@color/primary"
+            android:textColor="@color/black"
             style="@style/mNormalText.Heading3"
             android:textSize="12sp"
             android:fontFamily="@font/nunito_bold"

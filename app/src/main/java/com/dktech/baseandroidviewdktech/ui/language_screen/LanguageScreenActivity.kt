@@ -46,6 +46,7 @@ class LanguageScreenActivity :
     }
 
     override fun initData() {
+
     }
 
     override fun initView() {
@@ -81,7 +82,9 @@ class LanguageScreenActivity :
 
     private fun setLanguage(language: LanguageModel) {
         scope.launch {
-            setSelectedLanguage(this@LanguageScreenActivity, language)
+            setSelectedLanguage(this@LanguageScreenActivity, language) {
+                nextIntroActivity()
+            }
         }
     }
 

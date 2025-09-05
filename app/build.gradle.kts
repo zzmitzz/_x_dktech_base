@@ -56,4 +56,6 @@ dependencies {
     implementation(libs.datastore.core)
     implementation(libs.glide)
     implementation(libs.gson)
+    implementation(libs.androidx.viewpager2)
+    implementation(libs.material.v1130)
 }

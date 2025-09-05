@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Primary colors -->
-    <color name="primary">#FFFAF0</color>
-    <color name="onPrimary">#2F2F2F</color>
-    <color name="primaryContainer">#9A74E7</color>
-    <color name="onPrimaryContainer">#FFFFFF</color>
+    <color name="primary">#DEEE5F</color>
+    <color name="onPrimary">#FFFFFF</color>
+    <color name="primaryContainer">@color/black</color>
+    <color name="onPrimaryContainer">#8A8E96</color>
 
     <!-- Secondary colors -->
-    <color name="secondary">#BBACFF</color>
-    <color name="onSecondary">#FF000000</color>
+    <color name="secondary">#5099FF</color>
+    <color name="onSecondary">#FFFFFF</color>
     <color name="secondaryContainer">#34314F</color>
     <color name="onSecondaryContainer">#9A74E7</color>
 

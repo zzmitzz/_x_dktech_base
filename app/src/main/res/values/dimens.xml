@@ -28,7 +28,6 @@
     <dimen name="dp180">180dp</dimen>
     <dimen name="dp256">256dp</dimen>
 
-    <!-- Text Sizes (sp - scalable pixels) -->
     <dimen name="sp8">8sp</dimen>
     <dimen name="sp10">10sp</dimen>
     <dimen name="sp12">12sp</dimen>
@@ -41,5 +40,8 @@
     <dimen name="sp28">28sp</dimen>
     <dimen name="sp32">32sp</dimen>
     <dimen name="sp36">36sp</dimen>
+    <dimen name="sp48">48sp</dimen>
+    <dimen name="sp60">60sp</dimen>
+    <dimen name="sp72">72sp</dimen>
 </resources>
 

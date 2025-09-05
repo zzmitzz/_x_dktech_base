@@ -9,21 +9,41 @@
 
 
 
-
+    <!-- Heading -->
     <style name="mHeading">
         <item name="android:includeFontPadding">false</item>
     </style>
-    <style name="mHeading.P0" parent="mHeading">
-        <item name="android:fontFamily">@font/nunito_bold</item>
-        <item name="android:textSize">@dimen/sp20</item>
+    <style name="mHeading.P1.Semibold" parent="mHeading">
+        <item name="android:fontFamily">@font/hanken_grotesk_semibold</item>
+        <item name="android:textSize">@dimen/sp48</item>
     </style>
-    <style name="mHeading.P1" parent="mHeading">
-        <item name="android:fontFamily">@font/nunito_bold</item>
-        <item name="android:textSize">16sp</item>
+    <style name="mHeading.P1.Medium" parent="mHeading">
+        <item name="android:fontFamily">@font/hanken_grotesk_semibold</item>
+        <item name="android:textSize">@dimen/sp48</item>
     </style>
-    <style name="mHeading.P2" parent="mHeading">
-        <item name="android:fontFamily">@font/nunito_bold</item>
-        <item name="android:textSize">14sp</item>
+    <style name="mHeading.P2.Semibold" parent="mHeading">
+        <item name="android:fontFamily">@font/hanken_grotesk_semibold</item>
+        <item name="android:textSize">@dimen/sp40</item>
+    </style>
+    <style name="mHeading.P2.Medium" parent="mHeading">
+        <item name="android:fontFamily">@font/hanken_grotesk_semibold</item>
+        <item name="android:textSize">@dimen/sp40</item>
+    </style>
+    <style name="mHeading.P3.Semibold" parent="mHeading">
+        <item name="android:fontFamily">@font/hanken_grotesk_semibold</item>
+        <item name="android:textSize">@dimen/sp28</item>
+    </style>
+    <style name="mHeading.P3.Medium" parent="mHeading">
+        <item name="android:fontFamily">@font/hanken_grotesk_semibold</item>
+        <item name="android:textSize">@dimen/sp28</item>
+    </style>
+    <style name="mHeading.P4.Semibold" parent="mHeading">
+        <item name="android:fontFamily">@font/hanken_grotesk_semibold</item>
+        <item name="android:textSize">@dimen/sp24</item>
+    </style>
+    <style name="mHeading.P4.Medium" parent="mHeading">
+        <item name="android:fontFamily">@font/hanken_grotesk_semibold</item>
+        <item name="android:textSize">@dimen/sp24</item>
     </style>
 
 
@@ -43,4 +63,6 @@
         <item name="android:textSize">12sp</item>
         <item name="android:fontFamily">@font/nunito_medium</item>
     </style>
+
+    <dimen name="sp40">40sp</dimen>
 </resources>

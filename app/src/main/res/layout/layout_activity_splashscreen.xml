@@ -3,59 +3,59 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:background="@color/primary">
+    android:background="@color/black">
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/splash"
+            android:scaleType="centerCrop"/>
+
+        <ImageView
             android:id="@+id/logo"
+            android:layout_width="@dimen/dp36"
+            android:layout_height="@dimen/dp36"
             android:src="@mipmap/ic_launcher_round"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/appName"
-            android:layout_width="100dp"
-            android:layout_marginBottom="20dp"
-            android:layout_height="100dp"/>
+            app:layout_constraintBottom_toBottomOf="@+id/tvAdsAware"
+            android:layout_marginEnd="@dimen/dp16"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
         <TextView
             android:id="@+id/appName"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/app_name"
-            android:paddingHorizontal="80dp"
-            android:textAlignment="center"
-            style="@style/mHeading.P1"
+            android:fontFamily="@font/dm_sans_black"
+            android:text="@string/step_tracker"
+            android:textColor="@color/white"
+            android:textSize="56sp"
+            android:layout_marginBottom="@dimen/dp16"
             android:textStyle="bold"
-            android:textSize="20sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintBottom_toTopOf="@+id/lottieLoading"
+            app:layout_constraintStart_toStartOf="@+id/lottieLoading" />
 
         <ImageView
             android:id="@+id/lottieLoading"
-            android:src="@mipmap/ic_launcher_round"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/tvAdsAware"
-            android:layout_width="100dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_marginBottom="12dp"
-            android:layout_height="100dp"/>
+            android:src="@mipmap/ic_launcher_round"
+            android:layout_marginStart="@dimen/dp16"
+            app:layout_constraintBottom_toTopOf="@+id/tvAdsAware"
+            app:layout_constraintStart_toStartOf="parent" />
+
         <TextView
             android:id="@+id/tvAdsAware"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/this_action_contains_ads"
-            android:paddingHorizontal="80dp"
-            android:textAlignment="center"
-            style="@style/mHeading.P1"
-            android:textColor="@color/black"
-            android:textStyle="bold"
-            android:textSize="12sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginBottom="@dimen/dp24"
-            app:layout_constraintStart_toStartOf="parent" />
+            android:text="@string/this_action_contains_ads"
+            android:textAlignment="center"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/lottieLoading" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
