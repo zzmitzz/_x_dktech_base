@@ -9,10 +9,11 @@ import android.view.Gravity
 import android.view.Window
 import android.view.WindowManager
 import androidx.core.graphics.drawable.toDrawable
+import com.dktech.baseandroidviewdktech.R
 
 class LoadingDialog(
     context: Context,
-    layoutID: Int = 1
+    layoutID: Int = R.layout.loading_dialog
 )  {
     private var dialog: Dialog? = null
     private var run: Runnable? = null
@@ -48,7 +49,6 @@ class LoadingDialog(
         }
 
     }
-
     fun show() {
         dialog?.show()
         run?.let { handler?.postDelayed(it, 90000) }
