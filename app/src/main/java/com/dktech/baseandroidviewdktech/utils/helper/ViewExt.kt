@@ -40,7 +40,7 @@ fun View.setSafeOnClickListener(
     var lastClickTime: Long = 0L
     setOnClickListener {
         val now = System.currentTimeMillis()
-        if (now - lastClickTime < delay) {
+        if (now - lastClickTime > delay) {
             onClick(it)
             lastClickTime = now
         }
