@@ -29,7 +29,6 @@
             android:maxLines="1"
             android:ellipsize="end"
             android:textColor="@color/white"
-            style="@style/mHeading.P4.Semibold"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/ivDone"
             app:layout_constraintStart_toStartOf="parent"
@@ -46,9 +45,7 @@
             android:text="@string/apply"
             android:backgroundTint="@color/primary"
             android:textColor="@color/black"
-            style="@style/mNormalText.Heading3"
             android:textSize="12sp"
-            android:fontFamily="@font/nunito_bold"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

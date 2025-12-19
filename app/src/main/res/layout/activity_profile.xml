@@ -48,7 +48,6 @@
 
         <TextView
             android:id="@+id/tv_select_gender"
-            style="@style/mHeading.P3.Medium"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintStart_toStartOf="parent"

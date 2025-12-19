@@ -26,7 +26,6 @@
             android:id="@+id/appName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/dm_sans_black"
             android:text="@string/step_tracker"
             android:textColor="@color/white"
             android:textSize="56sp"

@@ -25,7 +25,6 @@
         android:singleLine="true"
         android:text="@string/english"
         android:textSize="14sp"
-        android:fontFamily="@font/nunito_semibold"
         android:textColor="@color/black" />
 
     <View
