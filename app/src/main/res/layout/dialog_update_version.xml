@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardCornerRadius="18dp"
+    android:layout_marginHorizontal="@dimen/dp16"
+    app:cardBackgroundColor="@android:color/white"
+    android:elevation="0dp"
+    app:cardElevation="0dp">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingTop="@dimen/dp10"
+        android:paddingBottom="@dimen/dp24"
+        android:paddingHorizontal="20dp">
+        <ImageView
+            android:id="@+id/icClose"
+            android:layout_gravity="end"
+            android:padding="5dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_close_ads"/>
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/img_update_version"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/don_t_miss_out"
+            android:textColor="@color/onSurface"
+            android:fontFamily="@font/inter_semibold"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginTop="20dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:alpha="0.6"
+            android:gravity="center"
+            android:text="@string/for_more_features_and_a_better_user_experience_please_upgrade_this_app"
+            android:textColor="@color/onSurface"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/btnUpdate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/upgrade"
+            android:textColor="@color/black"
+            android:fontFamily="@font/inter_semibold"
+            android:background="@drawable/bg_radius_12"
+            android:backgroundTint="@color/primary"
+            android:gravity="center"
+            android:layout_marginTop="24dp"
+            android:padding="12dp"
+            android:textSize="16sp"/>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

@@ -32,12 +32,11 @@ fun View.visible(){
 fun View.invisible(){
     visibility = View.INVISIBLE
 }
-
+var lastClickTime: Long = 0L
 fun View.setSafeOnClickListener(
     delay: Long = DEBOUNCE_CLICK,
     onClick: (View) -> Unit
 ) {
-    var lastClickTime: Long = 0L
     setOnClickListener {
         val now = System.currentTimeMillis()
         if (now - lastClickTime > delay) {

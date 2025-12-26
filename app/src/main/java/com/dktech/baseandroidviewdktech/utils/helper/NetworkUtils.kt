@@ -11,21 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
 object NetworkUtils {
-    fun isNetworkConnected(context: Context): Boolean {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val network = connectivityManager.activeNetwork ?: return false
-            val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
-
-            activeNetwork.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-                    activeNetwork.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-        } else {
-            @Suppress("DEPRECATION")
-            val networkInfo = connectivityManager.activeNetworkInfo
-            networkInfo?.isConnected == true
-        }
-    }
 
     fun observeNetworkState(context: Context): Flow<Boolean> = callbackFlow {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -53,7 +39,7 @@ object NetworkUtils {
         connectivityManager.registerNetworkCallback(networkRequest, networkCallback)
 
         // Send initial state
-        trySend(isNetworkConnected(context))
+        trySend(true)
 
         awaitClose {
             connectivityManager.unregisterNetworkCallback(networkCallback)

@@ -6,6 +6,7 @@ import androidx.activity.OnBackPressedCallback
 import com.dktech.baseandroidviewdktech.base.BaseActivity
 import com.dktech.baseandroidviewdktech.base.BaseViewModel
 import com.dktech.baseandroidviewdktech.databinding.LayoutActivitySplashscreenBinding
+import com.dktech.baseandroidviewdktech.ui.home.MainActivity
 import com.dktech.baseandroidviewdktech.ui.language_screen.LanguageScreenActivity
 
 class SplashScreenActivity : BaseActivity<LayoutActivitySplashscreenBinding>() {
@@ -19,15 +20,13 @@ class SplashScreenActivity : BaseActivity<LayoutActivitySplashscreenBinding>() {
         return LayoutActivitySplashscreenBinding.inflate(layoutInflater)
     }
 
+
     override fun initData() {
 
     }
 
     override fun initView() {
-        Handler().postDelayed(Runnable {
-            startActivity(Intent(this, LanguageScreenActivity::class.java))
-            finish()
-        }, 2000)
+        nextActivity()
     }
 
     override fun initEvent() {
@@ -35,6 +34,13 @@ class SplashScreenActivity : BaseActivity<LayoutActivitySplashscreenBinding>() {
 
     override fun initObserver() {
 
+    }
+
+    fun nextActivity(){
+        Handler().postDelayed(Runnable {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+        }, 2000)
     }
 
 }

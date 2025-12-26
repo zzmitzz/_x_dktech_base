@@ -1,11 +1,13 @@
 package com.dktech.baseandroidviewdktech.base
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
@@ -65,8 +67,7 @@ abstract class BaseActivity<viewBinding : ViewBinding> : AppCompatActivity() {
         initView()
         initEvent()
         hideNavigationBar()
-        hideSystemUI()
-
+//        setupNetworkMonitoring()
     }
 
     abstract fun getViewBinding(): viewBinding
@@ -81,7 +82,12 @@ abstract class BaseActivity<viewBinding : ViewBinding> : AppCompatActivity() {
     }
 
     open fun onNetworkSettings() {
-        // Default implementation - override in subclasses if needed
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+            val panelIntent = Intent(Settings.Panel.ACTION_WIFI)
+            startActivity(panelIntent)
+        }else{
+            startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
+        }
     }
 
     open fun shouldShowInternetDialog(): Boolean = true
@@ -141,15 +147,19 @@ abstract class BaseActivity<viewBinding : ViewBinding> : AppCompatActivity() {
 
         lifecycleScope.launch {
             NetworkUtils.observeNetworkState(this@BaseActivity).collectLatest { isConnected ->
+                if(!isConnected){
+                    internetErrorDialog.show(
+                        onRetry = {
+                            onNetworkSettings()
+                        },
+                        onSettings = {
+                            onNetworkSettings()
+                        }
+                    )
+                }else{
+                    internetErrorDialog.dismiss()
+                }
             }
-        }
-    }
-
-    private fun checkNetworkStatus() {
-        if (!shouldShowInternetDialog()) return
-
-        if (!NetworkUtils.isNetworkConnected(this)) {
-            showInternetDialog()
         }
     }
 

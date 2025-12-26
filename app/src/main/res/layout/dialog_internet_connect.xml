@@ -16,7 +16,7 @@
             android:id="@+id/customProgressBar"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:src="@drawable/ic_launcher_background" />
+            android:src="@drawable/wifi" />
         <TextView
             android:id="@+id/tvProgress"
             android:layout_width="wrap_content"
@@ -24,7 +24,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:layout_marginTop="16dp"
-            android:text="hen"
+            android:text="@string/network_error"
             android:textAlignment="center"
             android:textStyle="bold"
             android:textColor="@color/black"
@@ -36,7 +36,7 @@
             android:ellipsize="end"
             android:maxLines="3"
             android:layout_marginTop="16dp"
-            android:text="dm"
+            android:text="@string/this_application_requires_internet_connection_to_run_please_check_your_connection_and_try_again"
             android:textAlignment="center"
             android:textColor="@color/black"
             android:textSize="18sp" />
@@ -45,7 +45,7 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/dp48"
             android:layout_marginVertical="12dp"
-            android:text="Lmao"
+            android:text="@string/connect"
             android:gravity="center"
             android:textColor="@color/white"
             android:backgroundTint="#FF9332"
