@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="SelectableTextView">
+
+        <attr name="color_selected" format="color" />
+        <attr name="color_unselected" format="color" />
+
+    </declare-styleable>
+
+    <declare-styleable name="DotProgressView">
+        <!-- Specifies the basic height of the progress view. Min value = 10dp. -->
+        <attr name="mThinness" format="dimension"/>
+        <attr name="mBackgroundColor" format="color"/>
+        <attr name="mBackgroundStrokeColor" format="color"/>
+        <!-- Specifies the stroke thinness of background. Value in 2..(mThinness / 5)dp. -->
+        <attr name="mBackgroundStrokeWidth" format="dimension"/>
+        <!-- Specifies time (millisecond) to update progress. Min value = 400. -->
+        <attr name="mDotTime" format="integer"/>
+        <attr name="mDotColor" format="color"/>
+        <attr name="mDotWidth" format="dimension"/>
+        <attr name="mDotSpace" format="dimension"/>
+        <attr name="mShadowColor" format="color"/>
+        <!-- Specifies translateX of shadow. Note: need padding =)). -->
+        <attr name="mShadowDx" format="dimension"/>
+        <!-- Specifies translateY of shadow. Note: need padding =)). -->
+        <attr name="mShadowDy" format="dimension"/>
+    </declare-styleable>
+</resources>

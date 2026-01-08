@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:keepScreenOn="true">
+
+    <ImageView
+        android:id="@+id/ivBg"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/iv_bg"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/lMainContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/_6sdp"
+        android:paddingHorizontal="@dimen/_1sdp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_goneMarginBottom="0dp">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/glH1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.096" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/glH2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.555" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/glV1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.066" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/glV2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.946" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/glH3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.065" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/glV3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.16" />
+
+        <View
+            android:id="@+id/vGameConsole"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:paddingBottom="@dimen/_6sdp"
+            android:paddingHorizontal="@dimen/_2sdp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.constraintlayout.utils.widget.ImageFilterView
+            android:id="@+id/ivGameConsole"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"
+            android:paddingBottom="@dimen/_6sdp"
+            android:paddingHorizontal="@dimen/_2sdp"
+            app:layout_constraintBottom_toBottomOf="@id/vGameConsole"
+            app:layout_constraintEnd_toEndOf="@id/vGameConsole"
+            app:layout_constraintStart_toStartOf="@id/vGameConsole"
+            app:layout_constraintTop_toTopOf="@id/vGameConsole"
+            app:round="@dimen/_20sdp" />
+
+        <androidx.constraintlayout.utils.widget.ImageFilterView
+            android:id="@+id/ivBgConsole"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/bg_game_console"
+            android:scaleType="fitXY"
+            android:paddingBottom="@dimen/_6sdp"
+            android:paddingHorizontal="@dimen/_2sdp"
+            app:layout_constraintBottom_toBottomOf="@id/vGameConsole"
+            app:layout_constraintEnd_toEndOf="@id/vGameConsole"
+            app:layout_constraintStart_toStartOf="@id/vGameConsole"
+            app:layout_constraintTop_toTopOf="@id/vGameConsole"/>
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/ivBack"
+            android:layout_width="@dimen/_32sdp"
+            android:layout_height="@dimen/_32sdp"
+            android:backgroundTint="#1D113B"
+            android:padding="@dimen/_6sdp"
+            app:layout_constraintTop_toTopOf="@+id/ivGameConsole"
+            app:layout_constraintStart_toStartOf="@id/ivGameConsole"
+            app:layout_constraintEnd_toEndOf="@+id/glV3"
+            app:layout_constraintBottom_toBottomOf="@+id/glH3"
+            tools:ignore="ContentDescription" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/view"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginStart="22dp"
+            android:layout_marginBottom="22dp"
+            android:background="@drawable/oval"
+            android:backgroundTint="#1D113B"
+            android:padding="2dp"
+            android:src="@drawable/oval"
+            android:tint="#6FFC18"
+            app:layout_constraintBottom_toBottomOf="@id/vGameConsole"
+            app:layout_constraintStart_toStartOf="@id/vGameConsole"
+            tools:ignore="ContentDescription" />
+
+        <ImageView
+            android:id="@+id/iv"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginHorizontal="64dp"
+            android:layout_marginBottom="24dp"
+            app:layout_constraintBottom_toBottomOf="@id/vGameConsole"
+            app:layout_constraintDimensionRatio="114:12"
+            app:layout_constraintEnd_toEndOf="@id/vGameConsole"
+            app:layout_constraintStart_toStartOf="@id/vGameConsole"
+            app:layout_constraintWidth_max="114dp"
+            tools:ignore="ContentDescription" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cvGameContainer"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/bg_game_csl_radius"
+            app:layout_constraintBottom_toBottomOf="@+id/glH2"
+            app:layout_constraintEnd_toEndOf="@+id/glV2"
+            app:layout_constraintStart_toStartOf="@+id/glV1"
+            app:layout_constraintTop_toTopOf="@+id/glH1">
+
+            <FrameLayout
+                android:id="@+id/lGameContainer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <FrameLayout
+            android:id="@+id/lRightGamepad"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="18dp"
+            app:layout_constraintBottom_toBottomOf="@id/lLeftGamepad"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintHorizontal_chainStyle="spread_inside"
+            app:layout_constraintStart_toEndOf="@id/lLeftGamepad" />
+
+        <FrameLayout
+            android:id="@+id/lLeftGamepad"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="18dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginBottom="@dimen/_40sdp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/lRightGamepad"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintHorizontal_chainStyle="spread_inside"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <View
+            android:id="@+id/vEditControlsDarkening"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+        <View
+            android:id="@+id/vHorDivider"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/touch_control_stroke_size"
+            android:layout_marginHorizontal="22dp"
+            android:background="@drawable/rect_rounded_99"
+            android:backgroundTint="#6443CE"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/lLeftGamepad"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:visibility="visible" />
+
+        <View
+            android:id="@+id/vLeftVerDivider"
+            android:layout_width="@dimen/touch_control_stroke_size"
+            android:layout_height="0dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/lLeftGamepad"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <View
+            android:id="@+id/vRightVerDivider"
+            android:layout_width="@dimen/touch_control_stroke_size"
+            android:layout_height="0dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/lRightGamepad"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <include
+            android:id="@+id/settings_loading"
+            layout="@layout/layout_progressbar_pausemenu"
+            android:layout_width="@dimen/loading_circle_outer"
+            android:layout_height="@dimen/loading_circle_outer"
+            app:layout_constraintBottom_toBottomOf="@id/cvGameContainer"
+            app:layout_constraintEnd_toEndOf="@id/cvGameContainer"
+            app:layout_constraintStart_toStartOf="@id/cvGameContainer"
+            app:layout_constraintTop_toTopOf="@id/cvGameContainer" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/lLoading"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#3CFFFFFF"
+        app:layout_constraintBottom_toTopOf="@+id/frNative"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/vProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            app:indicatorColor="@color/pLight"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tvMsgLoading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/chakra_petch_regular"
+            android:includeFontPadding="false"
+            android:textColor="@color/nWhite"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/vProgress"
+            tools:text="@tools:sample/full_names" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <include
+        android:id="@+id/lMenu"
+        layout="@layout/layout_game_menu" />
+
+    <FrameLayout
+        android:id="@+id/frNative"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
