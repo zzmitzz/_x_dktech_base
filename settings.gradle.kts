@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "BaseDKTech"
+rootProject.name = "Base App"
 include(":app")
  
