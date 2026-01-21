@@ -7,7 +7,9 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
+import android.graphics.Picture
 import android.graphics.RectF
+import android.graphics.drawable.PictureDrawable
 import android.util.AttributeSet
 import android.util.Log
 import android.view.GestureDetector
@@ -15,9 +17,11 @@ import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
 import androidx.core.graphics.withMatrix
+import com.caverock.androidsvg.SVG
 import com.dktech.baseandroidviewdktech.svgparser.SVGInfo
 import com.dktech.baseandroidviewdktech.model.SegmentUIState
 import java.io.File
+import java.io.InputStream
 
 class DrawView
     @JvmOverloads
@@ -44,6 +48,10 @@ class DrawView
             }
         private var svgBounds = RectF()
         private val overlayMatrix = Matrix()
+        
+        private var strokeSvgPicture: Picture? = null
+        private var strokePngBitmap: Bitmap? = null
+        private val strokeMatrix = Matrix()
 
         private val debugPaint =
             Paint().apply {
@@ -179,42 +187,6 @@ class DrawView
             invalidate()
         }
 
-        fun loadOverlayBitmapFromFile(filePath: String) {
-            try {
-                val file = File(filePath)
-                if (file.exists()) {
-                    overlayBitmap?.recycle()
-
-                    val options =
-                        BitmapFactory.Options().apply {
-                            inScaled = false
-                            inPreferredConfig = Bitmap.Config.ARGB_8888
-                        }
-                    overlayBitmap = BitmapFactory.decodeFile(filePath, options)
-                    updateOverlayMatrix()
-                    invalidate()
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-
-        fun loadOverlayBitmapFromResource(resourceId: Int) {
-            try {
-                overlayBitmap?.recycle()
-
-                val options =
-                    BitmapFactory.Options().apply {
-                        inScaled = false
-                        inPreferredConfig = Bitmap.Config.ARGB_8888
-                    }
-                overlayBitmap = BitmapFactory.decodeResource(resources, resourceId, options)
-                updateOverlayMatrix()
-                invalidate()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
 
         private fun updateOverlayMatrix() {
             val bitmap = overlayBitmap ?: return
@@ -239,6 +211,55 @@ class DrawView
         fun clearOverlayBitmap() {
             overlayBitmap?.recycle()
             overlayBitmap = null
+            invalidate()
+        }
+
+        fun loadStrokeSvgFromResource(resourceId: Int) {
+            try {
+                val inputStream: InputStream = resources.openRawResource(resourceId)
+                val svg = SVG.getFromInputStream(inputStream)
+                strokeSvgPicture = svg.renderToPicture()
+                inputStream.close()
+                updateStrokeMatrix()
+                invalidate()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        fun loadStrokePngFromResource(resourceId: Int) {
+            try {
+                strokePngBitmap?.recycle()
+                val options = BitmapFactory.Options().apply {
+                    inScaled = false
+                    inPreferredConfig = Bitmap.Config.ARGB_8888
+                }
+                strokePngBitmap = BitmapFactory.decodeResource(resources, resourceId, options)
+                updateStrokeMatrix()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        private fun updateStrokeMatrix() {
+            if (svgBounds.isEmpty) return
+            
+            val svgWidth = svgBounds.width()
+            val svgHeight = svgBounds.height()
+            
+            strokeSvgPicture?.let { picture ->
+                val scaleX = svgWidth / picture.width
+                val scaleY = svgHeight / picture.height
+                strokeMatrix.reset()
+                strokeMatrix.postScale(scaleX, scaleY)
+                strokeMatrix.postTranslate(svgBounds.left, svgBounds.top)
+            }
+        }
+
+        fun clearStrokeOverlay() {
+            strokeSvgPicture = null
+            strokePngBitmap?.recycle()
+            strokePngBitmap = null
             invalidate()
         }
 
@@ -306,11 +327,6 @@ class DrawView
                                 if (selectedOriginalColor != null && uiState.segment.originalColor == selectedOriginalColor) {
                                     uiState.fillColor = selectedColor
                                     invalidate()
-                                    return true
-                                } else if (selectedOriginalColor == null) {
-                                    uiState.fillColor = uiState.segment.originalColor ?: Color.BLACK
-                                    invalidate()
-                                    return true
                                 }
                                 return true
                             }
@@ -326,7 +342,6 @@ class DrawView
             drawnLayerNumbers.clear()
 
             updateVisibleBounds()
-
             canvas.withMatrix(viewMatrix) {
                 segmentUIStates.forEach { uiState ->
                     if (!isGestureInProgress || isSegmentVisible(uiState.segment.bounds)) {
@@ -339,16 +354,34 @@ class DrawView
                             ) {
                                 drawGridOverlay(this, uiState.segment)
                             }
-
-                            if (shouldShowLayerNumber(uiState.segment)) {
-                                drawLayerNumber(this, uiState.segment)
-                            }
                         }
+
+                    }
+                    if (shouldShowLayerNumber(uiState.segment)) {
+                        drawLayerNumber(this, uiState.segment)
                     }
                 }
 
                 overlayBitmap?.let { bitmap ->
                     canvas.drawBitmap(bitmap, overlayMatrix, bitmapPaint)
+                }
+                
+                if (isGestureInProgress) {
+                    strokePngBitmap?.let { bitmap ->
+                        val pngMatrix = Matrix()
+                        val scaleX = svgBounds.width() / bitmap.width
+                        val scaleY = svgBounds.height() / bitmap.height
+                        pngMatrix.postScale(scaleX, scaleY)
+                        pngMatrix.postTranslate(svgBounds.left, svgBounds.top)
+                        canvas.drawBitmap(bitmap, pngMatrix, bitmapPaint)
+                    }
+                } else {
+                    strokeSvgPicture?.let { picture ->
+                        canvas.save()
+                        canvas.concat(strokeMatrix)
+                        canvas.drawPicture(picture)
+                        canvas.restore()
+                    }
                 }
             }
         }

@@ -54,8 +54,8 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
                     ColorItem(color, colorToLayerMap[color] ?: 0)
                 }
             colorPickerAdapter.submitList(colorItems)
-
-            drawView.loadOverlayBitmapFromResource(R.drawable.line_paint_1)
+            drawView.loadStrokeSvgFromResource(R.raw.line_paint_stroke_1)
+            drawView.loadStrokePngFromResource(R.drawable.line_paint_1)
         }
     }
     private fun setupColorPicker(drawView: DrawView) {

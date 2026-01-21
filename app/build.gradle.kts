@@ -58,4 +58,5 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.androidx.viewpager2)
     implementation(libs.material.v1130)
+    implementation("com.caverock:androidsvg-aar:1.4")
 }

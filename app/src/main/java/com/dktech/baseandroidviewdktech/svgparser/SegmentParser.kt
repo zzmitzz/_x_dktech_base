@@ -64,7 +64,7 @@ class SegmentParser {
                                 convertPath(xml, matrixStack)?.let { segment ->
                                     ensureDefaultGroup(groups, currentSegmentGroup)?.let { group ->
                                         currentSegmentGroup = group
-                                        currentSegmentGroup?.segments?.add(segment.copy(id = segmentsID++.toString()))
+                                        currentSegmentGroup.segments.add(segment.copy(id = segmentsID++.toString()))
                                     }
                                 }
                             }
