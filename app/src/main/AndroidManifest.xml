@@ -20,15 +20,20 @@
             android:name=".ui.splash_screen.SplashScreenActivity"
             android:configChanges="uiMode|orientation"
             android:exported="true">
+        </activity>
+        <activity
+            android:name=".ui.home.MainActivity"
+            android:configChanges="uiMode|orientation"
+            android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".ui.home.MainActivity"
-            android:configChanges="uiMode|orientation"
-            android:exported="true" />
+
+        <activity android:name=".ui.detail.DrawingActivity"
+            android:configChanges="uiMode"/>
+
         <activity
             android:name=".ui.language_screen.LanguageScreenActivity"
             android:configChanges="uiMode|orientation"
