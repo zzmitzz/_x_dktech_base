@@ -15,6 +15,7 @@ import kotlinx.coroutines.runInterruptible
 import org.xmlpull.v1.XmlPullParser
 import java.util.Stack
 import kotlin.math.roundToInt
+import androidx.core.graphics.toColorInt
 
 class SegmentParser {
     suspend fun parseSVGFile(
@@ -22,7 +23,6 @@ class SegmentParser {
         @RawRes svgRes: Int,
     ): SVGInfo {
         var segmentsID: Int = 0
-
         return runInterruptible(Dispatchers.Default) {
             val parser = mContext.resources.openRawResource(svgRes)
             val xml = Xml.newPullParser()
@@ -64,7 +64,7 @@ class SegmentParser {
                                 convertPath(xml, matrixStack)?.let { segment ->
                                     ensureDefaultGroup(groups, currentSegmentGroup)?.let { group ->
                                         currentSegmentGroup = group
-                                        currentSegmentGroup.segments.add(segment.copy(id = segmentsID++.toString()))
+                                        currentSegmentGroup.segments.add(segment.copy(id = segmentsID++))
                                     }
                                 }
                             }
@@ -73,7 +73,7 @@ class SegmentParser {
                                 convertCircle(xml, matrixStack)?.let { segment ->
                                     ensureDefaultGroup(groups, currentSegmentGroup)?.let { group ->
                                         currentSegmentGroup = group
-                                        currentSegmentGroup?.segments?.add(segment.copy(id = segmentsID++.toString()))
+                                        currentSegmentGroup?.segments?.add(segment.copy(id = segmentsID++))
                                     }
                                 }
                             }
@@ -82,7 +82,7 @@ class SegmentParser {
                                 convertRect(xml, matrixStack)?.let { segment ->
                                     ensureDefaultGroup(groups, currentSegmentGroup)?.let { group ->
                                         currentSegmentGroup = group
-                                        currentSegmentGroup?.segments?.add(segment.copy(id = segmentsID++.toString()))
+                                        currentSegmentGroup?.segments?.add(segment.copy(id = segmentsID++))
                                     }
                                 }
                             }
@@ -91,7 +91,7 @@ class SegmentParser {
                                 convertEllipse(xml, matrixStack)?.let { segment ->
                                     ensureDefaultGroup(groups, currentSegmentGroup)?.let { group ->
                                         currentSegmentGroup = group
-                                        currentSegmentGroup?.segments?.add(segment.copy(id = segmentsID++.toString()))
+                                        currentSegmentGroup?.segments?.add(segment.copy(id = segmentsID++))
                                     }
                                 }
                             }
@@ -100,7 +100,7 @@ class SegmentParser {
                                 convertPolygon(xml, matrixStack)?.let { segment ->
                                     ensureDefaultGroup(groups, currentSegmentGroup)?.let { group ->
                                         currentSegmentGroup = group
-                                        currentSegmentGroup?.segments?.add(segment.copy(id = segmentsID++.toString()))
+                                        currentSegmentGroup?.segments?.add(segment.copy(id = segmentsID++))
                                     }
                                 }
                             }
@@ -109,7 +109,7 @@ class SegmentParser {
                                 convertPolyline(xml, matrixStack)?.let { segment ->
                                     ensureDefaultGroup(groups, currentSegmentGroup)?.let { group ->
                                         currentSegmentGroup = group
-                                        currentSegmentGroup?.segments?.add(segment.copy(id = segmentsID++.toString()))
+                                        currentSegmentGroup?.segments?.add(segment.copy(id = segmentsID++))
                                     }
                                 }
                             }
@@ -129,7 +129,6 @@ class SegmentParser {
                 event = xml.next()
             }
 
-            assignLayerNumbers(groups)
 
             return@runInterruptible SVGInfo(
                 viewBoxWidth.roundToInt(),
@@ -163,8 +162,6 @@ class SegmentParser {
         matrixStack: Stack<Matrix>,
     ): Segments? {
         val d = xml.getAttributeValue(null, "d") ?: return null
-        val id = xml.getAttributeValue(null, "id") ?: "seg"
-        val number = xml.getAttributeValue(null, "data-number")?.toInt() ?: 0
         val fillColor = resolveFillColor(xml)
 
         val path = PathParser.createPathFromPathData(d)
@@ -172,15 +169,13 @@ class SegmentParser {
             path.transform(matrixStack.peek())
         }
 
-        return createSegment(id, number, path, fillColor, xml)
+        return createSegment(path, fillColor, xml)
     }
 
     private fun convertCircle(
         xml: XmlPullParser,
         matrixStack: Stack<Matrix>,
     ): Segments? {
-        val id = xml.getAttributeValue(null, "id") ?: "seg"
-        val number = xml.getAttributeValue(null, "data-number")?.toInt() ?: 0
         val cx = xml.getAttributeValue(null, "cx")?.toFloat() ?: 0f
         val cy = xml.getAttributeValue(null, "cy")?.toFloat() ?: 0f
         val r = xml.getAttributeValue(null, "r")?.toFloat() ?: 0f
@@ -194,15 +189,13 @@ class SegmentParser {
                 }
             }
 
-        return createSegment(id, number, path, fillColor, xml)
+        return createSegment(path, fillColor, xml)
     }
 
     private fun convertRect(
         xml: XmlPullParser,
         matrixStack: Stack<Matrix>,
     ): Segments? {
-        val id = xml.getAttributeValue(null, "id") ?: "seg"
-        val number = xml.getAttributeValue(null, "data-number")?.toInt() ?: 0
         val x = xml.getAttributeValue(null, "x")?.toFloat() ?: 0f
         val y = xml.getAttributeValue(null, "y")?.toFloat() ?: 0f
         val w = xml.getAttributeValue(null, "width")?.toFloat() ?: 0f
@@ -217,15 +210,13 @@ class SegmentParser {
                 }
             }
 
-        return createSegment(id, number, path, fillColor, xml)
+        return createSegment( path, fillColor, xml)
     }
 
     private fun convertEllipse(
         xml: XmlPullParser,
         matrixStack: Stack<Matrix>,
     ): Segments? {
-        val id = xml.getAttributeValue(null, "id") ?: "seg"
-        val number = xml.getAttributeValue(null, "data-number")?.toInt() ?: 0
         val cx = xml.getAttributeValue(null, "cx")?.toFloat() ?: 0f
         val cy = xml.getAttributeValue(null, "cy")?.toFloat() ?: 0f
         val rx = xml.getAttributeValue(null, "rx")?.toFloat() ?: 0f
@@ -240,15 +231,13 @@ class SegmentParser {
                 }
             }
 
-        return createSegment(id, number, path, fillColor, xml)
+        return createSegment(path, fillColor, xml)
     }
 
     private fun convertPolygon(
         xml: XmlPullParser,
         matrixStack: Stack<Matrix>,
     ): Segments? {
-        val id = xml.getAttributeValue(null, "id") ?: "seg"
-        val number = xml.getAttributeValue(null, "data-number")?.toInt() ?: 0
         val points = xml.getAttributeValue(null, "points") ?: return null
         val fillColor = resolveFillColor(xml)
 
@@ -257,15 +246,13 @@ class SegmentParser {
             path.transform(matrixStack.peek())
         }
 
-        return createSegment(id, number, path, fillColor, xml)
+        return createSegment(path, fillColor, xml)
     }
 
     private fun convertPolyline(
         xml: XmlPullParser,
         matrixStack: Stack<Matrix>,
     ): Segments? {
-        val id = xml.getAttributeValue(null, "id") ?: "seg"
-        val number = xml.getAttributeValue(null, "data-number")?.toInt() ?: 0
         val points = xml.getAttributeValue(null, "points") ?: return null
         val fillColor = resolveFillColor(xml)
 
@@ -274,36 +261,27 @@ class SegmentParser {
             path.transform(matrixStack.peek())
         }
 
-        return createSegment(id, number, path, fillColor, xml)
+        return createSegment(path, fillColor, xml)
     }
 
     private fun createSegment(
-        id: String,
-        number: Int,
         path: Path,
         fillColor: Int?,
         xml: XmlPullParser,
     ): Segments {
         val region = buildRegion(path)
-        val bounds = RectF()
-        path.computeBounds(bounds, true)
-
         val paint =
             Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 style = Paint.Style.FILL
                 color = fillColor ?: Color.BLACK
             }
-        val strokePaint = createPaintFromSvg(xml)
+//        val strokePaint = createPaintFromSvg(xml)
 
         return Segments(
-            id = id,
-            number = number,
             path = path,
             region = region,
             fillPaint = paint,
-            strokePaint = strokePaint,
             originalColor = fillColor,
-            bounds = bounds,
         )
     }
 
@@ -363,7 +341,7 @@ class SegmentParser {
 
     private fun buildRegion(path: Path): Region {
         val bounds = RectF()
-        path.computeBounds(bounds, true)
+        path.computeBounds(bounds,true)
         return Region().apply {
             setPath(
                 path,
@@ -407,11 +385,11 @@ class SegmentParser {
         try {
             when {
                 fillValue == "none" -> {
-                    android.graphics.Color.TRANSPARENT
+                    Color.TRANSPARENT
                 }
 
                 fillValue.startsWith("#") -> {
-                    android.graphics.Color.parseColor(fillValue)
+                    fillValue.toColorInt()
                 }
 
                 fillValue.startsWith("rgb(") -> {
@@ -421,44 +399,16 @@ class SegmentParser {
                             .substringBefore(")")
                             .split(",")
                             .map { it.trim().toInt() }
-                    android.graphics.Color.rgb(values[0], values[1], values[2])
+                    Color.rgb(values[0], values[1], values[2])
                 }
 
                 else -> {
-                    when (fillValue.lowercase()) {
-                        "white" -> android.graphics.Color.WHITE
-                        "black" -> android.graphics.Color.BLACK
-                        "red" -> android.graphics.Color.RED
-                        "green" -> android.graphics.Color.GREEN
-                        "blue" -> android.graphics.Color.BLUE
-                        else -> android.graphics.Color.WHITE
-                    }
+                    Color.WHITE
                 }
             }
         } catch (e: Exception) {
-            android.graphics.Color.WHITE
+            Color.WHITE
         }
 
-    private fun assignLayerNumbers(groups: List<SegmentGroup>) {
-        val colorToLayerMap = mutableMapOf<Int, Int>()
-        var currentLayer = 1
 
-        groups.forEach { group ->
-            group.segments.forEach { segment ->
-                val color = segment.originalColor
-                if (!colorToLayerMap.containsKey(color) && color != null) {
-                    colorToLayerMap[color] = currentLayer++
-                }
-            }
-        }
-
-        groups.forEach { group ->
-            group.segments.forEach { segment ->
-                val layerNumber = colorToLayerMap[segment.originalColor] ?: 1
-                val updatedSegment = segment.copy(layerNumber = layerNumber)
-                val index = group.segments.indexOf(segment)
-                group.segments[index] = updatedSegment
-            }
-        }
-    }
 }

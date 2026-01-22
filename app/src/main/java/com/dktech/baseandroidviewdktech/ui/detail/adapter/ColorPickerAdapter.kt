@@ -1,5 +1,6 @@
 package com.dktech.baseandroidviewdktech.ui.detail.adapter
 
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
@@ -9,18 +10,24 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.dktech.baseandroidviewdktech.R
+import com.dktech.baseandroidviewdktech.databinding.ItemColorBinding
 import com.dktech.baseandroidviewdktech.model.ColorItem
 
 class ColorPickerAdapter(
-    private val onColorSelected: (Int) -> Unit
+    private val onColorSelected: (ColorItem) -> Unit
 ) : ListAdapter<ColorItem, ColorPickerAdapter.ColorViewHolder>(ColorDiffCallback()) {
 
     private var selectedPosition = -1
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ColorViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_color, parent, false)
-        return ColorViewHolder(view)
+        val layoutInflater = LayoutInflater.from(parent.context)
+        return ColorViewHolder(ItemColorBinding.inflate(layoutInflater))
+    }
+
+
+    fun updateSelectedPos(colorItem: ColorItem){
+        selectedPosition = currentList.indexOf(colorItem)
+        notifyItemChanged(selectedPosition)
     }
 
     override fun onBindViewHolder(holder: ColorViewHolder, position: Int) {
@@ -28,34 +35,22 @@ class ColorPickerAdapter(
         holder.bind(colorItem, position == selectedPosition) { clickedPosition ->
             val previousPosition = selectedPosition
             selectedPosition = clickedPosition
-            
             if (previousPosition != -1) {
                 notifyItemChanged(previousPosition)
             }
             notifyItemChanged(selectedPosition)
-            
-            onColorSelected(colorItem.color)
+            onColorSelected(colorItem)
         }
     }
 
-    class ColorViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val colorView: View = itemView.findViewById(R.id.colorView)
-        private val selectionIndicator: View = itemView.findViewById(R.id.selectionIndicator)
-        private val layerNumberText: TextView = itemView.findViewById(R.id.layerNumberText)
+    class ColorViewHolder(val binding: ItemColorBinding) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(colorItem: ColorItem, isSelected: Boolean, onClick: (Int) -> Unit) {
-            colorView.setBackgroundColor(colorItem.color)
-            
-            if (colorItem.color == Color.WHITE) {
-                colorView.setBackgroundColor(Color.LTGRAY)
-            }
-            
-            layerNumberText.text = colorItem.layerNumber.toString()
-            
-            selectionIndicator.visibility = if (isSelected) View.VISIBLE else View.GONE
-            
+            binding.colorView.backgroundTintList = ColorStateList.valueOf(colorItem.color)
+            binding.layerNumberText.text = colorItem.layerNumber.toString()
+            binding.selectionIndicator.visibility = if (isSelected) View.VISIBLE else View.GONE
             itemView.setOnClickListener {
-                onClick(adapterPosition)
+                onClick(bindingAdapterPosition)
             }
         }
     }

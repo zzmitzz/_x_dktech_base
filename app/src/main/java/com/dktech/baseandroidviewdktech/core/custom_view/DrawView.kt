@@ -8,6 +8,7 @@ import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Picture
+import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.drawable.PictureDrawable
 import android.util.AttributeSet
@@ -18,9 +19,7 @@ import android.view.ScaleGestureDetector
 import android.view.View
 import androidx.core.graphics.withMatrix
 import com.caverock.androidsvg.SVG
-import com.dktech.baseandroidviewdktech.svgparser.SVGInfo
 import com.dktech.baseandroidviewdktech.model.SegmentUIState
-import java.io.File
 import java.io.InputStream
 
 class DrawView
@@ -34,7 +33,11 @@ class DrawView
             attr,
             defStyle,
         ) {
-        private var segmentFiles: SVGInfo? = null
+
+
+
+        var onFillColorCallback: ((Int) -> Unit)? = null
+
         private val segmentUIStates = mutableListOf<SegmentUIState>()
         private var selectedColor: Int = Color.RED
         private var selectedOriginalColor: Int? = null
@@ -53,12 +56,6 @@ class DrawView
         private var strokePngBitmap: Bitmap? = null
         private val strokeMatrix = Matrix()
 
-        private val debugPaint =
-            Paint().apply {
-                style = Paint.Style.FILL
-                alpha = 80
-            }
-
         private val viewMatrix = Matrix()
         private val inverseMatrix = Matrix()
 
@@ -66,7 +63,7 @@ class DrawView
         private var lastFocusY = 0f
 
         private val drawnLayerNumbers = mutableSetOf<Int>()
-        private val visibleBounds = RectF()
+        private val visibleBounds = Rect()
         private var isGestureInProgress = false
         private val textMeasurementCache = mutableMapOf<String, Float>()
 
@@ -112,6 +109,10 @@ class DrawView
                 },
             )
         }
+
+    fun setCallbackOnColor(a: (Int) -> Unit){
+        this.onFillColorCallback = a
+    }
         private val gestureDetector: GestureDetector by lazy {
             GestureDetector(
                 context,
@@ -166,23 +167,10 @@ class DrawView
             super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         }
 
-        fun initSegmentFile(segmentFile: SVGInfo) {
-            segmentFiles = segmentFile
+        fun initSegmentFile(svgWidth: Float, svgHeight: Float, segments: List<SegmentUIState>) {
             segmentUIStates.clear()
-
-            svgBounds.set(0f, 0f, segmentFile.width.toFloat(), segmentFile.height.toFloat())
-
-            segmentFile.paths.forEach { group ->
-                group.segments.forEach { segment ->
-                    segmentUIStates.add(
-                        SegmentUIState(
-                            segment,
-                            fillColor = if (segment.originalColor != null) Color.WHITE else Color.BLACK,
-                        ),
-                    )
-                }
-            }
-
+            segmentUIStates.addAll(segments)
+            svgBounds.set(0f, 0f, svgWidth, svgHeight)
             updateOverlayMatrix()
             invalidate()
         }
@@ -263,23 +251,6 @@ class DrawView
             invalidate()
         }
 
-        fun getUniqueColors(): List<Int> =
-            segmentUIStates
-                .mapNotNull { it.segment.originalColor }
-                .distinct()
-                .sorted()
-
-        fun getColorToLayerMap(): Map<Int, Int> {
-            val colorToLayerMap = mutableMapOf<Int, Int>()
-            segmentUIStates.forEach { uiState ->
-                uiState.segment.originalColor?.let { color ->
-                    if (!colorToLayerMap.containsKey(color)) {
-                        colorToLayerMap[color] = uiState.segment.layerNumber
-                    }
-                }
-            }
-            return colorToLayerMap
-        }
 
         fun setSelectedColor(color: Int) {
             selectedColor = color
@@ -295,7 +266,6 @@ class DrawView
         private fun updateSelectedLayerNumber() {
             selectedLayerNumber = segmentUIStates
                 .firstOrNull { it.segment.originalColor == selectedColor }
-                ?.segment
                 ?.layerNumber ?: -1
         }
 
@@ -311,7 +281,6 @@ class DrawView
                         invalidate()
                     }
                 }
-
                 MotionEvent.ACTION_DOWN -> {
                     if (!scaleDetector.isInProgress) {
                         viewMatrix.invert(inverseMatrix)
@@ -323,15 +292,19 @@ class DrawView
                         val y = pts[1].toInt()
 
                         segmentUIStates.reversed().forEach { uiState ->
-                            if (uiState.segment.region.contains(x, y)) {
+                            if (uiState.segment.region.contains(x, y) && !uiState.isColored ) {
                                 if (selectedOriginalColor != null && uiState.segment.originalColor == selectedOriginalColor) {
                                     uiState.fillColor = selectedColor
+                                    uiState.isColored = true
+                                    onFillColorCallback?.invoke(selectedColor)
                                     invalidate()
                                 }
-                                return true
                             }
+                            return@forEach
                         }
                     }
+                    return true
+
                 }
             }
             return scaleHandled || gestureHandled || super.onTouchEvent(event)
@@ -344,12 +317,12 @@ class DrawView
             updateVisibleBounds()
             canvas.withMatrix(viewMatrix) {
                 segmentUIStates.forEach { uiState ->
-                    if (!isGestureInProgress || isSegmentVisible(uiState.segment.bounds)) {
+                    if (!isGestureInProgress || isSegmentVisible(uiState.segment.region.bounds)) {
                         fillPaint.color = uiState.fillColor
                         drawPath(uiState.segment.path, fillPaint)
                         if (!isGestureInProgress) {
                             if (selectedLayerNumber > 0 &&
-                                uiState.segment.layerNumber == selectedLayerNumber &&
+                                uiState.layerNumber == selectedLayerNumber &&
                                 uiState.fillColor == Color.WHITE
                             ) {
                                 drawGridOverlay(this, uiState.segment)
@@ -357,8 +330,8 @@ class DrawView
                         }
 
                     }
-                    if (shouldShowLayerNumber(uiState.segment)) {
-                        drawLayerNumber(this, uiState.segment)
+                    if (shouldShowLayerNumber(uiState)) {
+                        drawLayerNumber(this, uiState)
                     }
                 }
 
@@ -387,41 +360,41 @@ class DrawView
         }
 
         private fun updateVisibleBounds() {
-            visibleBounds.set(0f, 0f, width.toFloat(), height.toFloat())
+            visibleBounds.set(0, 0, width, height)
             val tempMatrix = Matrix()
             viewMatrix.invert(tempMatrix)
-            tempMatrix.mapRect(visibleBounds)
+            tempMatrix.mapRect(RectF(visibleBounds))
         }
 
-        private fun isSegmentVisible(bounds: RectF): Boolean = RectF.intersects(visibleBounds, bounds)
+        private fun isSegmentVisible(bounds: Rect): Boolean = Rect.intersects(visibleBounds, bounds)
 
         private fun drawGridOverlay(
             canvas: Canvas,
             segment: com.dktech.baseandroidviewdktech.svgparser.Segments,
         ) {
-            val bounds = segment.bounds
+            val bounds = segment.region.bounds
             val gridSize = 5f
-
             canvas.save()
             canvas.clipPath(segment.path)
 
-            var x = bounds.left
+            var x = bounds.left.toFloat()
             while (x <= bounds.right) {
-                canvas.drawLine(x, bounds.top, x, bounds.bottom, gridPaint)
+                canvas.drawLine(x, bounds.top.toFloat(), x, bounds.bottom.toFloat(), gridPaint)
                 x += gridSize
             }
 
-            var y = bounds.top
+            var y = bounds.top.toFloat()
             while (y <= bounds.bottom) {
-                canvas.drawLine(bounds.left, y, bounds.right, y, gridPaint)
+                canvas.drawLine(bounds.left.toFloat(), y, bounds.right.toFloat(), y, gridPaint)
                 y += gridSize
             }
 
             canvas.restore()
         }
 
-        private fun shouldShowLayerNumber(segment: com.dktech.baseandroidviewdktech.svgparser.Segments): Boolean {
-            val bounds = segment.bounds
+        private fun shouldShowLayerNumber(uiState: SegmentUIState): Boolean {
+            val segment = uiState.segment
+            val bounds = segment.region.bounds
             val textSize = bounds.width().coerceAtMost(bounds.height()) / 3f
 
             val values = FloatArray(9)
@@ -434,7 +407,7 @@ class DrawView
                 return false
             }
 
-            val text = segment.layerNumber.toString()
+            val text = uiState.layerNumber.toString()
             val cacheKey = "$text-$textSize"
             val textWidth =
                 textMeasurementCache.getOrPut(cacheKey) {
@@ -453,14 +426,15 @@ class DrawView
 
         private fun drawLayerNumber(
             canvas: Canvas,
-            segment: com.dktech.baseandroidviewdktech.svgparser.Segments,
+            uiState: SegmentUIState,
         ) {
-            val bounds = segment.bounds
+            val segment = uiState.segment
+            val bounds = segment.region.bounds
             val textSize = bounds.width().coerceAtMost(bounds.height()) / 4f
             textPaint.textSize = textSize
 
-            val text = segment.layerNumber.toString()
-            val x = bounds.centerX()
+            val text = uiState.layerNumber.toString()
+            val x = bounds.centerX().toFloat()
             val y = bounds.centerY() - (textPaint.descent() + textPaint.ascent()) / 2
 
             canvas.save()

@@ -40,14 +40,14 @@
             android:layout_marginEnd="16dp"
             android:layout_weight="1"
             android:max="100"
-            android:progress="49"
+            android:progress="0"
             android:progressDrawable="@drawable/progress_achievement" />
 
         <TextView
+            android:id="@+id/tvProgress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/nunito_bold"
-            android:text="70.8 %"
             android:textColor="#404040"
             android:textSize="13sp" />
     </LinearLayout>

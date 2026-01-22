@@ -7,13 +7,9 @@ import android.graphics.RectF
 import android.graphics.Region
 
 data class Segments(
-    val id: String,
-    val number: Int,
+    val id: Int = 0,
     val path: Path,
     val region: Region,
     val fillPaint: Paint,
-    val strokePaint: Paint?,
     val originalColor: Int?,
-    val bounds: RectF = RectF(),
-    val layerNumber: Int = 1,
 )

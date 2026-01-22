@@ -8,5 +8,5 @@ data class SegmentUIState(
     val segment: Segments,
     var fillColor: Int = Color.WHITE,
     var isColored: Boolean = false,
-    var showLayerNumber: Int = 1,
+    var layerNumber: Int = -1,
 )
