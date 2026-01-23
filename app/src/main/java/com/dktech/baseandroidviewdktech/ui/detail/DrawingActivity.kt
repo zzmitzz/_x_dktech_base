@@ -26,34 +26,32 @@ import kotlinx.coroutines.withContext
 import java.io.InputStream
 
 class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
-
     private val viewModel by viewModels<DrawingVM>()
     private lateinit var colorPickerAdapter: ColorPickerAdapter
 
     override val onBackPressedCallback: OnBackPressedCallback
-        get() = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                finish()
+        get() =
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    finish()
+                }
             }
-        }
 
     private val fileHelper by lazy {
         FileHelper(this@DrawingActivity)
     }
 
-    override fun getViewBinding(): ActivityDrawingBinding {
-        return ActivityDrawingBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(): ActivityDrawingBinding = ActivityDrawingBinding.inflate(layoutInflater)
 
     override fun initData() {
-
     }
-
 
     private val onDrawColorToSegment: ((Int) -> Unit) = { segmentID ->
 
         viewModel.colorSegment(segmentID)
-        val segment = viewModel.drawingUIState.value.segmentUIState.find { it.id == segmentID }
+        val segment =
+            viewModel.drawingUIState.value.segmentUIState
+                .find { it.id == segmentID }
         val colorItem = colorPickerAdapter.currentList.find { it.color == segment?.targetColor }
         colorItem?.let {
             if (it.freqShown == 1) {
@@ -71,7 +69,6 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
             }
         }
     }
-
 
     @SuppressLint("DefaultLocale")
     override fun initView() {
@@ -100,7 +97,6 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
         }
     }
 
-
     private fun updateProgressBar() {
         val listData = viewModel.drawingUIState.value.segmentUIState
         if (listData.isEmpty()) return
@@ -110,13 +106,11 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
         binding.tvProgress.text = String.format("%.2f%%", finishPercent)
     }
 
-
     private fun finishDrawEffect() {
         Intent(this@DrawingActivity, ResultActivity::class.java).apply {
             startActivity(this)
         }
         finish()
-
     }
 
     override fun initObserver() {
@@ -146,14 +140,12 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
                 }
             }
         }
-
     }
 
-
     private fun preparingData(
-        strokeSVG: String = "line_3_stroke.svg",
-        strokePNG: String = "line_3_stroke.png",
-        fillSVG: String = "line_3.svg"
+        strokeSVG: String = "line_paint_2_stroke.svg",
+        strokePNG: String = "line_paint_2.png",
+        fillSVG: String = "line_paint_2.svg",
     ) {
         viewModel.initSegmentDraw(this@DrawingActivity, fillSVG)
         binding.drawview.loadStrokeSvgFromResource(fileHelper.parseAssetFileToPicture(strokeSVG))

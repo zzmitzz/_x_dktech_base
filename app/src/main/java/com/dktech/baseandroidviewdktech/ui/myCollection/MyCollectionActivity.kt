@@ -6,16 +6,14 @@ import com.dktech.baseandroidviewdktech.databinding.ActivityMyCollectionBinding
 
 class MyCollectionActivity : BaseActivity<ActivityMyCollectionBinding>() {
     override val onBackPressedCallback: OnBackPressedCallback
-        get() = object : OnBackPressedCallback(true){
-            override fun handleOnBackPressed() {
-                finish()
+        get() =
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    finish()
+                }
             }
 
-        }
-
-    override fun getViewBinding(): ActivityMyCollectionBinding {
-        return ActivityMyCollectionBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(): ActivityMyCollectionBinding = ActivityMyCollectionBinding.inflate(layoutInflater)
 
     override fun initData() {
     }
@@ -28,5 +26,4 @@ class MyCollectionActivity : BaseActivity<ActivityMyCollectionBinding>() {
 
     override fun initObserver() {
     }
-
 }

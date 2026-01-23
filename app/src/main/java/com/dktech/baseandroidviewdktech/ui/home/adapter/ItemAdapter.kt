@@ -12,60 +12,60 @@ class ItemAdapter(
     val listItem: List<Painting>,
     val onClick: (Painting) -> Unit,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-
     override fun onCreateViewHolder(
         parent: ViewGroup,
-        viewType: Int
+        viewType: Int,
     ): ItemViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
-        return when(viewType){
+        return when (viewType) {
             1 -> {
-
+                ItemViewHolder(ItemPaintMainBinding.inflate(layoutInflater))
             }
+
             2 -> {
+                ItemViewHolder(ItemPaintMainBinding.inflate(layoutInflater))
+            }
+
+            else -> {
                 ItemViewHolder(ItemPaintMainBinding.inflate(layoutInflater))
             }
         }
     }
+
     override fun onBindViewHolder(
         holder: RecyclerView.ViewHolder,
-        position: Int
+        position: Int,
     ) {
-        if(listItem[position].imageLocal == null){
+        if (listItem[position].imageLocal == null) {
             (holder as ItemViewHolder).onBind()
-        }else{
-
+        } else {
         }
     }
 
-    override fun getItemCount(): Int {
-        return listItem.size
-    }
-
+    override fun getItemCount(): Int = listItem.size
 
     override fun getItemViewType(position: Int): Int {
-        if(listItem[position].imageLocal == null){
+        if (listItem[position].imageLocal == null) {
             return 1 // This item hasn't beed downloaded
-        }else{
+        } else {
             return 2 // Downloaded.
         }
     }
 
-    inner class ItemLocalViewHolder()
+    inner class ItemLocalViewHolder
 
-    inner class ItemViewHolder(val binding: ItemPaintMainBinding) : RecyclerView.ViewHolder(binding.root){
-        fun onBind(){
+    inner class ItemViewHolder(
+        val binding: ItemPaintMainBinding,
+    ) : RecyclerView.ViewHolder(binding.root) {
+        fun onBind() {
             val item = listItem[bindingAdapterPosition]
             binding.root.setSafeOnClickListener {
                 onClick(item)
             }
-            Glide.with(binding.root)
+            Glide
+                .with(binding.root)
                 .load(item.imageThumbRemote)
                 .into(binding.imageLine)
-
         }
     }
-
-
-
 }

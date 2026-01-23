@@ -18,29 +18,25 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlin.collections.forEach
 
-
 data class DrawingUIState(
     val svgWidth: Float = 0f,
     val svgHeight: Float = 0f,
     val color: List<ColorItem> = emptyList(),
-    val segmentUIState: List<SegmentUIState> = emptyList()
+    val segmentUIState: List<SegmentUIState> = emptyList(),
 )
 
 data class ConfigUIState(
     val showPrevent: Boolean = false,
     val vibratePress: Boolean = false,
-    val currentSelectedColor: ColorItem? = null
+    val currentSelectedColor: ColorItem? = null,
 )
 
-
 class DrawingVM : ViewModel() {
-
     private var _drawingUIState = MutableStateFlow<DrawingUIState>(DrawingUIState())
     val drawingUIState = _drawingUIState.asStateFlow()
 
     private var _configUIState = MutableStateFlow<ConfigUIState>(ConfigUIState())
     val configUIState = _configUIState.asStateFlow()
-
 
     private val segmentParser by lazy {
         SegmentParser()
@@ -49,56 +45,58 @@ class DrawingVM : ViewModel() {
     private lateinit var segmentLoadState: SegmentLoadState
 
     fun setColor(colorItem: ColorItem) {
-        _configUIState.value = _configUIState.value.copy(
-            currentSelectedColor = colorItem
-        )
+        _configUIState.value =
+            _configUIState.value.copy(
+                currentSelectedColor = colorItem,
+            )
     }
 
     fun initConfiguration() {
-
     }
 
     private var currentFileName: String = ""
 
     fun colorSegment(segmentID: Int) {
-
-        if(!::segmentLoadState.isInitialized){
+        if (!::segmentLoadState.isInitialized) {
             return
         }
 
         val segmentIndex = _drawingUIState.value.segmentUIState.indexOfFirst { it.id == segmentID }
         if (segmentIndex != -1) {
-            val segment = _drawingUIState.value.segmentUIState[segmentIndex].copy(
-                isColored = true
-            )
+            val segment =
+                _drawingUIState.value.segmentUIState[segmentIndex].copy(
+                    isColored = true,
+                )
             val newList = _drawingUIState.value.segmentUIState.toMutableList()
             newList[segmentIndex] = segment
-            _drawingUIState.value = _drawingUIState.value.copy(
-                segmentUIState = newList
-            )
+            _drawingUIState.value =
+                _drawingUIState.value.copy(
+                    segmentUIState = newList,
+                )
         }
         viewModelScope.launch {
             segmentLoadState.segmentColoredStateDB.insertColoredSegment(
                 ColoredSegment(
                     fileName = currentFileName,
-                    segmentId = segmentID
-                )
+                    segmentId = segmentID,
+                ),
             )
         }
     }
 
-
-    fun initSegmentDraw(mContext: Context, fileName: String) {
-
-
-        if(!::segmentLoadState.isInitialized){
-            segmentLoadState = SegmentLoadState(
-                AppDatabase.getDatabase(mContext).colorSegmentDAO()
-            )
+    fun initSegmentDraw(
+        mContext: Context,
+        fileName: String,
+    ) {
+        if (!::segmentLoadState.isInitialized) {
+            segmentLoadState =
+                SegmentLoadState(
+                    AppDatabase.getDatabase(mContext).colorSegmentDAO(),
+                )
         }
 
         currentFileName = fileName
-        viewModelScope.launch() {
+        viewModelScope.launch {
             val svgFile =
                 segmentParser.parseSVGFile(
                     mContext,
@@ -124,7 +122,6 @@ class DrawingVM : ViewModel() {
 
             val mapColorToLayer = mapLayersNumber(segmentsUIState)
 
-
             segmentsUIState.forEach { segment ->
                 segment.segment.originalColor?.let {
                     val layerNumber = mapColorToLayer[it]
@@ -134,25 +131,27 @@ class DrawingVM : ViewModel() {
                 }
             }
 
-
             val colorItems =
-                uniqueColor.map { color ->
-                    ColorItem(
-                        color,
-                        mapColorToLayer[color],
-                        segmentsUIState.filter { !it.isColored }
-                            .count { it.segment.originalColor == color })
-                }.filter { it.freqShown != 0 }
+                uniqueColor
+                    .map { color ->
+                        ColorItem(
+                            color,
+                            mapColorToLayer[color],
+                            segmentsUIState
+                                .filter { !it.isColored }
+                                .count { it.segment.originalColor == color },
+                        )
+                    }.filter { it.freqShown != 0 }
 
-            _drawingUIState.value = _drawingUIState.value.copy(
-                svgWidth = svgFile.width.toFloat(),
-                svgHeight = svgFile.height.toFloat(),
-                color = colorItems,
-                segmentUIState = segmentsUIState
-            )
+            _drawingUIState.value =
+                _drawingUIState.value.copy(
+                    svgWidth = svgFile.width.toFloat(),
+                    svgHeight = svgFile.height.toFloat(),
+                    color = colorItems,
+                    segmentUIState = segmentsUIState,
+                )
         }
     }
-
 
     private fun getUniqueColors(segment: List<Segments>): List<Int> =
         segment
@@ -172,5 +171,4 @@ class DrawingVM : ViewModel() {
         }
         return colorToLayerMap
     }
-
 }
