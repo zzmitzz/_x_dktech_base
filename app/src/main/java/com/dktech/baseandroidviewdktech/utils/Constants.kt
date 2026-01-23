@@ -1,6 +1,7 @@
 package com.dktech.baseandroidviewdktech.utils
 
 import android.graphics.Paint
+import android.net.Uri
 import androidx.annotation.DrawableRes
 import androidx.annotation.RawRes
 import com.dktech.baseandroidviewdktech.R
@@ -8,8 +9,8 @@ import com.dktech.baseandroidviewdktech.R
 
 data class Painting(
     val id: Int = 1,
-    @DrawableRes val overLayLinePaint: Int = R.drawable.line_paint_1,
-    @RawRes val underLayerPaint: Int = R.raw.line_paint_1
+    val imageThumbRemote : String = "https://gs-jj-us-static.oss-accelerate.aliyuncs.com/u_file/1902/products/25/9ac904e4a7.jpg",
+    val imageLocal: Uri? = null
 )
 
 // Damn thing live as application lifecycle

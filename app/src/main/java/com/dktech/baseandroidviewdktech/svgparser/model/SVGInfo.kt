@@ -1,4 +1,4 @@
-package com.dktech.baseandroidviewdktech.svgparser
+package com.dktech.baseandroidviewdktech.svgparser.model
 
 data class SVGInfo(
     val width: Int,

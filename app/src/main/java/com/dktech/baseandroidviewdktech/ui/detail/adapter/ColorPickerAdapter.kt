@@ -26,8 +26,15 @@ class ColorPickerAdapter(
 
 
     fun updateSelectedPos(colorItem: ColorItem){
+        var oldSelectPos = RecyclerView.NO_POSITION
+        if(selectedPosition != -1){
+            oldSelectPos = selectedPosition
+        }
         selectedPosition = currentList.indexOf(colorItem)
         notifyItemChanged(selectedPosition)
+        if(oldSelectPos != RecyclerView.NO_POSITION){
+            notifyItemChanged(oldSelectPos)
+        }
     }
 
     override fun onBindViewHolder(holder: ColorViewHolder, position: Int) {

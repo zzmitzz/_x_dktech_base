@@ -8,7 +8,6 @@ import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Region
 import android.util.Xml
-import androidx.annotation.RawRes
 import androidx.core.graphics.PathParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
@@ -16,17 +15,20 @@ import org.xmlpull.v1.XmlPullParser
 import java.util.Stack
 import kotlin.math.roundToInt
 import androidx.core.graphics.toColorInt
+import com.dktech.baseandroidviewdktech.svgparser.model.SVGInfo
+import com.dktech.baseandroidviewdktech.svgparser.model.SegmentGroup
+import com.dktech.baseandroidviewdktech.svgparser.model.Segments
 
 class SegmentParser {
     suspend fun parseSVGFile(
         mContext: Context,
-        @RawRes svgRes: Int,
+        assetFileName: String
     ): SVGInfo {
         var segmentsID: Int = 0
         return runInterruptible(Dispatchers.Default) {
-            val parser = mContext.resources.openRawResource(svgRes)
+            val inputStream = mContext.assets.open(assetFileName)
             val xml = Xml.newPullParser()
-            xml.setInput(parser, null)
+            xml.setInput(inputStream, null)
             val groups = mutableListOf<SegmentGroup>()
             val matrixStack = Stack<Matrix>()
             var currentSegmentGroup: SegmentGroup? = null

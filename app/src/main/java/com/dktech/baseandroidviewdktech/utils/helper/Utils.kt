@@ -1,12 +1,15 @@
 package com.dktech.baseandroidviewdktech.utils.helper
 
 import android.content.Context
+import android.graphics.Picture
+import com.caverock.androidsvg.SVG
 import com.dktech.baseandroidviewdktech.base.ui_models.LanguageModel
 import com.dktech.baseandroidviewdktech.base.ui_models.getLanguageList
 import com.dktech.baseandroidviewdktech.utils.PersistentStorage
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.first
+import java.io.InputStream
 
 
 inline fun <reified T> Gson.fromJsonWithTypeToken(value: String): T {
@@ -28,3 +31,6 @@ fun setSelectedLanguage(context: Context, language: LanguageModel, onSuccess: ()
     PersistentStorage.Companion.getInstance(context)
         .saveKey(PersistentStorage.Key.APPLICATION_LANGUAGE, Gson().toJsonWithTypeToken(language), onSuccess)
 }
+
+
+

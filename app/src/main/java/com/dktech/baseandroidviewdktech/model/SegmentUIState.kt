@@ -1,12 +1,12 @@
 package com.dktech.baseandroidviewdktech.model
 
 import android.graphics.Color
-import android.graphics.Paint
-import com.dktech.baseandroidviewdktech.svgparser.Segments
+import com.dktech.baseandroidviewdktech.svgparser.model.Segments
 
 data class SegmentUIState(
+    val id: Int,
     val segment: Segments,
-    var fillColor: Int = Color.WHITE,
+    var targetColor: Int = Color.WHITE,
     var isColored: Boolean = false,
     var layerNumber: Int = -1,
 )

@@ -3,6 +3,7 @@ package com.dktech.baseandroidviewdktech.ui.home.adapter
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.dktech.baseandroidviewdktech.databinding.ItemPaintMainBinding
 import com.dktech.baseandroidviewdktech.utils.Painting
 import com.dktech.baseandroidviewdktech.utils.helper.setSafeOnClickListener
@@ -10,25 +11,47 @@ import com.dktech.baseandroidviewdktech.utils.helper.setSafeOnClickListener
 class ItemAdapter(
     val listItem: List<Painting>,
     val onClick: (Painting) -> Unit,
-) : RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
     ): ItemViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
-        return ItemViewHolder(ItemPaintMainBinding.inflate(layoutInflater))
+        return when(viewType){
+            1 -> {
+
+            }
+            2 -> {
+                ItemViewHolder(ItemPaintMainBinding.inflate(layoutInflater))
+            }
+        }
     }
     override fun onBindViewHolder(
-        holder: ItemViewHolder,
+        holder: RecyclerView.ViewHolder,
         position: Int
     ) {
-        holder.onBind()
+        if(listItem[position].imageLocal == null){
+            (holder as ItemViewHolder).onBind()
+        }else{
+
+        }
     }
 
     override fun getItemCount(): Int {
         return listItem.size
     }
+
+
+    override fun getItemViewType(position: Int): Int {
+        if(listItem[position].imageLocal == null){
+            return 1 // This item hasn't beed downloaded
+        }else{
+            return 2 // Downloaded.
+        }
+    }
+
+    inner class ItemLocalViewHolder()
 
     inner class ItemViewHolder(val binding: ItemPaintMainBinding) : RecyclerView.ViewHolder(binding.root){
         fun onBind(){
@@ -36,7 +59,13 @@ class ItemAdapter(
             binding.root.setSafeOnClickListener {
                 onClick(item)
             }
-            binding.imageLine.setImageResource(item.overLayLinePaint)
+            Glide.with(binding.root)
+                .load(item.imageThumbRemote)
+                .into(binding.imageLine)
+
         }
     }
+
+
+
 }

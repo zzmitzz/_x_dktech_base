@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("com.google.devtools.ksp") version "2.0.21-1.0.25"
 }
 
 android {
@@ -44,6 +45,9 @@ android {
 
 dependencies {
 
+    val roomVersion = "2.7.0" // Use the latest stable version
+
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -60,5 +64,10 @@ dependencies {
     implementation(libs.material.v1130)
     implementation("com.caverock:androidsvg-aar:1.4")
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
+
+
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    ksp("androidx.room:room-compiler:$roomVersion")
 
 }

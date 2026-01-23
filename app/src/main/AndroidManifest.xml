@@ -31,6 +31,13 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.finish.ResultActivity"
+            android:configChanges="uiMode|orientation"
+            android:exported="false">
+        </activity>
+
+
         <activity android:name=".ui.detail.DrawingActivity"
             android:configChanges="uiMode"/>
 

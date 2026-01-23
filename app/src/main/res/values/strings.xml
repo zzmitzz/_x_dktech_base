@@ -26,4 +26,10 @@
     <string name="don_t_miss_out">Don\'t miss out</string>
     <string name="for_more_features_and_a_better_user_experience_please_upgrade_this_app">For more features and a better user experience please upgrade this app</string>
     <string name="upgrade">Upgrade</string>
+    <string name="congratulations">Congratulations!</string>
+    <string name="download">Download</string>
+    <string name="home">Home</string>
+    <string name="my_artwork">#My artwork</string>
+    <string name="painted_on">Painted on</string>
+    <string name="my_collection">My Collection</string>
 </resources>

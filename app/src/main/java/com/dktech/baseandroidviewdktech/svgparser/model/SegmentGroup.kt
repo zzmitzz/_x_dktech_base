@@ -1,6 +1,5 @@
-package com.dktech.baseandroidviewdktech.svgparser
+package com.dktech.baseandroidviewdktech.svgparser.model
 
-import android.graphics.Color
 import android.graphics.Matrix
 
 data class SegmentGroup(

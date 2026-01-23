@@ -1,9 +1,7 @@
-package com.dktech.baseandroidviewdktech.svgparser
+package com.dktech.baseandroidviewdktech.svgparser.model
 
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
-import android.graphics.RectF
 import android.graphics.Region
 
 data class Segments(
