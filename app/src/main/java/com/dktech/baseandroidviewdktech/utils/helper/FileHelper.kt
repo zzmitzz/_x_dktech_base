@@ -8,21 +8,17 @@ import com.caverock.androidsvg.SVG
 import java.io.IOException
 
 class FileHelper(
-    val context: Context
+    val context: Context,
 ) {
-    fun parseAssetFileToPicture(
-        fileName: String
-    ): Picture {
+    fun parseAssetFileToPicture(fileName: String): Picture {
         val inputStream = context.assets.open(fileName)
         val svg = SVG.getFromInputStream(inputStream)
         inputStream.close()
         return svg.renderToPicture()
     }
 
-    fun parseAssetPNGFile(
-        fileName: String
-    ): Bitmap?{
-        return try {
+    fun parseAssetPNGFile(fileName: String): Bitmap? =
+        try {
             context.assets.open(fileName).use { inputStream ->
                 BitmapFactory.decodeStream(inputStream)
             }
@@ -30,5 +26,4 @@ class FileHelper(
             e.printStackTrace()
             null
         }
-    }
 }

@@ -17,6 +17,7 @@ import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
 import androidx.core.graphics.createBitmap
+import androidx.core.graphics.withClip
 import androidx.core.graphics.withMatrix
 import com.caverock.androidsvg.SVG
 import com.dktech.baseandroidviewdktech.model.SegmentUIState
@@ -41,7 +42,6 @@ class DrawView
         private var selectedOriginalColor: Int? = null
         private var selectedLayerNumber: Int = -1
 
-        private var overlayBitmap: Bitmap? = null
         private val bitmapPaint =
             Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 isFilterBitmap = false
@@ -51,7 +51,6 @@ class DrawView
         private val overlayMatrix = Matrix()
 
         private var strokeSvgPicture: Picture? = null
-        private var strokePngBitmap: Bitmap? = null
         private val strokeMatrix = Matrix()
 
         private val viewMatrix = Matrix()
@@ -178,7 +177,6 @@ class DrawView
             segmentUIStates.clear()
             segmentUIStates.addAll(segments)
             svgBounds.set(0f, 0f, svgWidth, svgHeight)
-            updateOverlayMatrix()
             invalidateCache()
             invalidate()
         }
@@ -216,48 +214,13 @@ class DrawView
                 fillPaint.color = if (!uiState.isColored) Color.WHITE else uiState.targetColor
                 cacheCanvas.drawPath(uiState.segment.path, fillPaint)
             }
-
-            overlayBitmap?.let { overlay ->
-                cacheCanvas.drawBitmap(overlay, overlayMatrix, bitmapPaint)
-            }
-
             strokeSvgPicture?.let { picture ->
-                cacheCanvas.save()
-                cacheCanvas.concat(strokeMatrix)
-                cacheCanvas.drawPicture(picture)
-                cacheCanvas.restore()
+                cacheCanvas.withMatrix(strokeMatrix) {
+                    drawPicture(picture)
+                }
             }
 
             isCacheValid = true
-        }
-
-        private fun updateOverlayMatrix() {
-            val bitmap = overlayBitmap ?: return
-            if (svgBounds.isEmpty) return
-
-            val svgWidth = svgBounds.width()
-            val svgHeight = svgBounds.height()
-
-            Log.d("DrawView", "High-res PNG: ${bitmap.width}x${bitmap.height}")
-            Log.d("DrawView", "Target SVG bounds: ${svgWidth}x$svgHeight")
-
-            val scaleX = svgWidth / bitmap.width
-            val scaleY = svgHeight / bitmap.height
-
-            overlayMatrix.reset()
-            overlayMatrix.postScale(scaleX, scaleY)
-            overlayMatrix.postTranslate(svgBounds.left, svgBounds.top)
-
-            Log.d(
-                "DrawView",
-                "Matrix scale: ${scaleX}x$scaleY (preserving ${bitmap.width}x${bitmap.height} quality)",
-            )
-        }
-
-        fun clearOverlayBitmap() {
-            overlayBitmap?.recycle()
-            overlayBitmap = null
-            invalidate()
         }
 
         fun loadStrokeSvgFromResource(asset: Picture) {
@@ -265,16 +228,6 @@ class DrawView
                 strokeSvgPicture = asset
                 updateStrokeMatrix()
                 invalidate()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-
-        fun loadStrokePngFromResource(bitmap: Bitmap) {
-            try {
-                strokePngBitmap?.recycle()
-                strokePngBitmap = bitmap
-                updateStrokeMatrix()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -297,8 +250,6 @@ class DrawView
 
         fun clearStrokeOverlay() {
             strokeSvgPicture = null
-            strokePngBitmap?.recycle()
-            strokePngBitmap = null
             invalidate()
         }
 
@@ -369,6 +320,17 @@ class DrawView
                 cachedCanvasBitmap?.let { bitmap ->
                     canvas.withMatrix(viewMatrix) {
                         drawBitmap(bitmap, 0f, 0f, bitmapPaint)
+                        segmentUIStates.forEach { uiState ->
+                            if (selectedLayerNumber > 0 &&
+                                uiState.layerNumber == selectedLayerNumber &&
+                                !uiState.isColored
+                            ) {
+                                drawGridOverlay(this, uiState.segment)
+                            }
+                            if (shouldShowLayerNumber(uiState)) {
+                                drawLayerNumber(this, uiState)
+                            }
+                        }
                     }
                 }
             } else {
@@ -388,15 +350,10 @@ class DrawView
                         }
                     }
 
-                    overlayBitmap?.let { bitmap ->
-                        canvas.drawBitmap(bitmap, overlayMatrix, bitmapPaint)
-                    }
-
                     strokeSvgPicture?.let { picture ->
-                        canvas.save()
-                        canvas.concat(strokeMatrix)
-                        canvas.drawPicture(picture)
-                        canvas.restore()
+                        canvas.withMatrix(strokeMatrix) {
+                            drawPicture(picture)
+                        }
                     }
                 }
             }
@@ -417,22 +374,19 @@ class DrawView
         ) {
             val bounds = segment.region.bounds
             val gridSize = 5f
-            canvas.save()
-            canvas.clipPath(segment.path)
+            canvas.withClip(segment.path) {
+                var x = bounds.left.toFloat()
+                while (x <= bounds.right) {
+                    drawLine(x, bounds.top.toFloat(), x, bounds.bottom.toFloat(), gridPaint)
+                    x += gridSize
+                }
 
-            var x = bounds.left.toFloat()
-            while (x <= bounds.right) {
-                canvas.drawLine(x, bounds.top.toFloat(), x, bounds.bottom.toFloat(), gridPaint)
-                x += gridSize
+                var y = bounds.top.toFloat()
+                while (y <= bounds.bottom) {
+                    drawLine(bounds.left.toFloat(), y, bounds.right.toFloat(), y, gridPaint)
+                    y += gridSize
+                }
             }
-
-            var y = bounds.top.toFloat()
-            while (y <= bounds.bottom) {
-                canvas.drawLine(bounds.left.toFloat(), y, bounds.right.toFloat(), y, gridPaint)
-                y += gridSize
-            }
-
-            canvas.restore()
         }
 
         private fun shouldShowLayerNumber(uiState: SegmentUIState): Boolean {
@@ -480,10 +434,9 @@ class DrawView
             val x = bounds.centerX().toFloat()
             val y = bounds.centerY() - (textPaint.descent() + textPaint.ascent()) / 2
 
-            canvas.save()
-            canvas.clipPath(segment.path)
-            canvas.drawText(text, x, y, textPaint)
-            canvas.restore()
+            canvas.withClip(segment.path) {
+                drawText(text, x, y, textPaint)
+            }
         }
 
         override fun onDetachedFromWindow() {

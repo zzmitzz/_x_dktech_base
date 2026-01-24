@@ -98,4 +98,24 @@
 
     </androidx.recyclerview.widget.RecyclerView>
 
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/previewView"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="8dp"
+        app:strokeColor="@android:color/transparent"
+        app:cardElevation="12dp"
+        app:layout_constraintStart_toStartOf="@+id/linearLayout2"
+        app:cardBackgroundColor="@color/white"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout2" >
+        <ImageView
+            android:id="@+id/imView"
+            android:layout_width="match_parent"
+            android:padding="4dp"
+            android:layout_height="match_parent"
+            android:src="@drawable/line_paint_1"/>
+    </com.google.android.material.card.MaterialCardView>
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

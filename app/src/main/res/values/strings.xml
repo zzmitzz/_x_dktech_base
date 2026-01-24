@@ -32,4 +32,8 @@
     <string name="my_artwork">#My artwork</string>
     <string name="painted_on">Painted on</string>
     <string name="my_collection">My Collection</string>
+    <string name="settings">Settings</string>
+    <string name="show_preview_window">Show preview window</string>
+    <string name="vibrate_when_long_press">Vibrate when long press</string>
+    <string name="btn_save">Save</string>
 </resources>

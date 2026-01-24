@@ -1,9 +1,17 @@
 package com.dktech.baseandroidviewdktech.ui.detail
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Matrix
+import android.graphics.Paint
+import android.graphics.Picture
+import android.util.Log
 import androidx.collection.IntIntMap
 import androidx.collection.MutableIntIntMap
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.withMatrix
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dktech.baseandroidviewdktech.data.local.AppDatabase
@@ -13,9 +21,17 @@ import com.dktech.baseandroidviewdktech.model.SegmentUIState
 import com.dktech.baseandroidviewdktech.svgparser.SegmentLoadState
 import com.dktech.baseandroidviewdktech.svgparser.SegmentParser
 import com.dktech.baseandroidviewdktech.svgparser.model.Segments
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
+import java.io.File
+import java.io.FileOutputStream
 import kotlin.collections.forEach
 
 data class DrawingUIState(
@@ -26,7 +42,7 @@ data class DrawingUIState(
 )
 
 data class ConfigUIState(
-    val showPrevent: Boolean = false,
+    val showPreview: Boolean = false,
     val vibratePress: Boolean = false,
     val currentSelectedColor: ColorItem? = null,
 )
@@ -34,6 +50,9 @@ data class ConfigUIState(
 class DrawingVM : ViewModel() {
     private var _drawingUIState = MutableStateFlow<DrawingUIState>(DrawingUIState())
     val drawingUIState = _drawingUIState.asStateFlow()
+
+    private var svgFileName: String = ""
+    private var svgStrokeFileName: Picture? = null
 
     private var _configUIState = MutableStateFlow<ConfigUIState>(ConfigUIState())
     val configUIState = _configUIState.asStateFlow()
@@ -43,6 +62,20 @@ class DrawingVM : ViewModel() {
     }
 
     private lateinit var segmentLoadState: SegmentLoadState
+
+    fun setPreview(a: Boolean) {
+        _configUIState.value =
+            _configUIState.value.copy(
+                showPreview = a,
+            )
+    }
+
+    fun setVibrate(a: Boolean) {
+        _configUIState.value =
+            _configUIState.value.copy(
+                vibratePress = a,
+            )
+    }
 
     fun setColor(colorItem: ColorItem) {
         _configUIState.value =
@@ -54,13 +87,25 @@ class DrawingVM : ViewModel() {
     fun initConfiguration() {
     }
 
-    private var currentFileName: String = ""
-
     fun colorSegment(segmentID: Int) {
         if (!::segmentLoadState.isInitialized) {
             return
         }
+        updateSegmentColored(segmentID)
+        // update color state
 
+        viewModelScope.launch {
+            segmentLoadState.segmentColoredStateDB.insertColoredSegment(
+                ColoredSegment(
+                    fileName = svgFileName,
+                    segmentId = segmentID,
+                ),
+            )
+        }
+    }
+
+    // update segment color state
+    private fun updateSegmentColored(segmentID: Int) {
         val segmentIndex = _drawingUIState.value.segmentUIState.indexOfFirst { it.id == segmentID }
         if (segmentIndex != -1) {
             val segment =
@@ -74,19 +119,17 @@ class DrawingVM : ViewModel() {
                     segmentUIState = newList,
                 )
         }
-        viewModelScope.launch {
-            segmentLoadState.segmentColoredStateDB.insertColoredSegment(
-                ColoredSegment(
-                    fileName = currentFileName,
-                    segmentId = segmentID,
-                ),
-            )
-        }
     }
 
+    /*
+     - {fileName} is the file to distinguish different file and also use as the filled segment
+     - strokePicture is the picture parsed from svg file with the help of AndroidSVG
+     @Credits: anhnt
+     */
     fun initSegmentDraw(
         mContext: Context,
         fileName: String,
+        strokePicture: Picture,
     ) {
         if (!::segmentLoadState.isInitialized) {
             segmentLoadState =
@@ -95,12 +138,14 @@ class DrawingVM : ViewModel() {
                 )
         }
 
-        currentFileName = fileName
+        svgFileName = fileName
+        svgStrokeFileName = strokePicture
+
         viewModelScope.launch {
             val svgFile =
                 segmentParser.parseSVGFile(
                     mContext,
-                    currentFileName,
+                    svgFileName,
                 )
             var segmentsUIState = mutableListOf<SegmentUIState>()
             svgFile.paths.forEach { group ->
@@ -170,5 +215,80 @@ class DrawingVM : ViewModel() {
             }
         }
         return colorToLayerMap
+    }
+
+    // Have to ensure the job is finished even if the viewmodel is cleared. -_-
+    private var unLifeScopedCoroutine = CoroutineScope(Dispatchers.Default + SupervisorJob())
+
+    fun onScreenLeaving(cacheDir: File) {
+        unLifeScopedCoroutine.launch {
+            saveCacheThumbnail(File(cacheDir, svgFileName.replace("svg", "png")))
+        }
+    }
+
+    private suspend fun saveCacheThumbnail(fileOutputDir: File) {
+        withTimeout(10000L) {
+            val start = System.currentTimeMillis()
+            val thumbnailSize = 512
+            val segments = _drawingUIState.value.segmentUIState
+            val svgWidth = _drawingUIState.value.svgWidth
+            val svgHeight = _drawingUIState.value.svgHeight
+
+            if (segments.isEmpty() || svgWidth <= 0 || svgHeight <= 0) return@withTimeout
+
+            val bitmap = createBitmap(thumbnailSize, thumbnailSize)
+            val canvas = Canvas(bitmap)
+
+            val scaleX = thumbnailSize / svgWidth
+            val scaleY = thumbnailSize / svgHeight
+            val scale = minOf(scaleX, scaleY)
+
+            val scaledWidth = svgWidth * scale
+            val scaledHeight = svgHeight * scale
+            val offsetX = (thumbnailSize - scaledWidth) / 2f
+            val offsetY = (thumbnailSize - scaledHeight) / 2f
+
+            val drawMatrix =
+                Matrix().apply {
+                    postScale(scale, scale)
+                    postTranslate(offsetX, offsetY)
+                }
+
+            val fillPaint =
+                Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    style = Paint.Style.FILL
+                }
+
+            canvas.drawColor(Color.WHITE)
+
+            canvas.withMatrix(drawMatrix) {
+                segments.forEach { uiState ->
+                    fillPaint.color = if (!uiState.isColored) Color.WHITE else uiState.targetColor
+                    drawPath(uiState.segment.path, fillPaint)
+                }
+
+                svgStrokeFileName?.let {
+                    val strokeMatrix =
+                        Matrix().apply {
+                            val strokeScaleX = svgWidth / it.width
+                            val strokeScaleY = svgHeight / it.height
+                            postScale(strokeScaleX, strokeScaleY)
+                        }
+                    withMatrix(strokeMatrix) {
+                        drawPicture(it)
+                    }
+                }
+            }
+
+            try {
+                FileOutputStream(fileOutputDir).use { out ->
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                bitmap.recycle()
+            }
+        }
     }
 }

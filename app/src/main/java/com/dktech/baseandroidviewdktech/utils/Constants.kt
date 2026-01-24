@@ -14,6 +14,8 @@ data class Painting(
 
 // Damn thing live as application lifecycle
 object Constants {
+    val configPreview: String = "PREFS_OPEN_PREVIEW"
+    val configVibration: String = "PREFS_OPEN_VIBRATION"
     val mockListData =
         buildList {
             repeat(10) {

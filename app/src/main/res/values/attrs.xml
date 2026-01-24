@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="IOSSwitch">
+        <attr name="android:checked" />
+        <attr name="trackColorOn" format="color" />
+        <attr name="trackColorOff" format="color" />
+        <attr name="thumbColorOn" format="color" />
+        <attr name="thumbColorOff" format="color" />
+    </declare-styleable>
+</resources>

@@ -2,6 +2,8 @@ package com.dktech.baseandroidviewdktech.ui.detail
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.lifecycle.Lifecycle
@@ -12,13 +14,17 @@ import androidx.recyclerview.widget.RecyclerView
 import com.caverock.androidsvg.SVG
 import com.dktech.baseandroidviewdktech.R
 import com.dktech.baseandroidviewdktech.base.BaseActivity
+import com.dktech.baseandroidviewdktech.base.dialog.SettingDrawingBTS
 import com.dktech.baseandroidviewdktech.core.custom_view.DrawView
 import com.dktech.baseandroidviewdktech.databinding.ActivityDrawingBinding
 import com.dktech.baseandroidviewdktech.model.ColorItem
 import com.dktech.baseandroidviewdktech.svgparser.SegmentParser
 import com.dktech.baseandroidviewdktech.ui.detail.adapter.ColorPickerAdapter
 import com.dktech.baseandroidviewdktech.ui.finish.ResultActivity
+import com.dktech.baseandroidviewdktech.utils.Constants
 import com.dktech.baseandroidviewdktech.utils.helper.FileHelper
+import com.dktech.baseandroidviewdktech.utils.helper.getBooleanPrefs
+import com.dktech.baseandroidviewdktech.utils.helper.setBooleanPrefs
 import com.dktech.baseandroidviewdktech.utils.helper.setSafeOnClickListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -46,9 +52,15 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
     override fun initData() {
     }
 
-    private val onDrawColorToSegment: ((Int) -> Unit) = { segmentID ->
+    private val handler = Handler(Looper.getMainLooper())
+    val saveBitmapThumbnailRunnable =
+        Runnable { viewModel.onScreenLeaving(cacheDir) }
 
+    private val onDrawColorToSegment: ((Int) -> Unit) = { segmentID ->
         viewModel.colorSegment(segmentID)
+        handler.removeCallbacks(saveBitmapThumbnailRunnable)
+        handler.postDelayed(saveBitmapThumbnailRunnable, 500L)
+        // update the color picker list.
         val segment =
             viewModel.drawingUIState.value.segmentUIState
                 .find { it.id == segmentID }
@@ -73,10 +85,11 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
     @SuppressLint("DefaultLocale")
     override fun initView() {
         setupColorPicker(binding.drawview)
-
         binding.drawview.setCallbackOnColor(onDrawColorToSegment)
         viewModel.initConfiguration()
         preparingData()
+        viewModel.setPreview(getBooleanPrefs(Constants.configPreview, false))
+        viewModel.setVibrate(getBooleanPrefs(Constants.configVibration, false))
     }
 
     private fun setupColorPicker(drawView: DrawView) {
@@ -93,7 +106,24 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
 
     override fun initEvent() {
         binding.icBack.setSafeOnClickListener {
+            viewModel.onScreenLeaving(cacheDir)
             onBackPressedCallback.handleOnBackPressed()
+        }
+        binding.icSetting.setSafeOnClickListener {
+            SettingDrawingBTS(
+                initState =
+                    getBooleanPrefs(
+                        Constants.configPreview,
+                        false,
+                    ) to getBooleanPrefs(Constants.configVibration, false),
+                onSave = {
+                    setBooleanPrefs(Constants.configPreview, it.first)
+                    setBooleanPrefs(Constants.configVibration, it.second)
+                },
+            ).show(
+                supportFragmentManager,
+                "SettingDrawingBTS",
+            )
         }
     }
 
@@ -103,7 +133,11 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
         val finishPercent =
             (listData.filter { it.isColored }.size / listData.size.toFloat()) * 100
         binding.progressBar.setProgress(finishPercent.toInt(), true)
-        binding.tvProgress.text = String.format("%.2f%%", finishPercent)
+        binding.tvProgress.text = String.format("%.2f%% ", finishPercent)
+    }
+
+    override fun onStop() {
+        super.onStop()
     }
 
     private fun finishDrawEffect() {
@@ -119,9 +153,6 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
                 viewModel.drawingUIState.collect {
                     colorPickerAdapter.submitList(it.color)
                     binding.drawview.initSegmentFile(it.svgWidth, it.svgHeight, it.segmentUIState)
-//                    if (it.color.isNotEmpty() && viewModel.configUIState.value.currentSelectedColor == null) {
-//                        viewModel.setColor(it.color.first())
-//                    }
                     updateProgressBar()
                     val data = viewModel.drawingUIState.value.segmentUIState
                     if (data.isNotEmpty() && data.all { seg -> seg.isColored }) {
@@ -144,13 +175,10 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
 
     private fun preparingData(
         strokeSVG: String = "line_paint_2_stroke.svg",
-        strokePNG: String = "line_paint_2.png",
         fillSVG: String = "line_paint_2.svg",
     ) {
-        viewModel.initSegmentDraw(this@DrawingActivity, fillSVG)
-        binding.drawview.loadStrokeSvgFromResource(fileHelper.parseAssetFileToPicture(strokeSVG))
-        fileHelper.parseAssetPNGFile(strokePNG)?.let {
-            binding.drawview.loadStrokePngFromResource(it)
-        }
+        val strokePicture = fileHelper.parseAssetFileToPicture(strokeSVG)
+        viewModel.initSegmentDraw(this@DrawingActivity, fillSVG, strokePicture)
+        binding.drawview.loadStrokeSvgFromResource(strokePicture)
     }
 }

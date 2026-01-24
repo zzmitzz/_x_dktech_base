@@ -1,4 +1,4 @@
-package com.dktech.baseandroidviewdktech.ui.myCollection
+package com.dktech.baseandroidviewdktech.ui.my_collection
 
 import androidx.activity.OnBackPressedCallback
 import com.dktech.baseandroidviewdktech.base.BaseActivity

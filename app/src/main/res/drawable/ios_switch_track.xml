@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- ON -->
+    <item android:state_checked="true">
+        <inset
+            android:insetLeft="3dp"
+            android:insetRight="3dp"
+            android:insetTop="3dp"
+            android:insetBottom="3dp">
+
+            <shape android:shape="rectangle">
+                <corners android:radius="50dp"/>
+                <solid android:color="#0071C7"/>
+            </shape>
+
+        </inset>
+    </item>
+
+    <!-- OFF -->
+    <item>
+        <inset
+            android:insetLeft="3dp"
+            android:insetRight="3dp"
+            android:insetTop="3dp"
+            android:insetBottom="3dp">
+
+            <shape android:shape="rectangle">
+                <corners android:radius="50dp"/>
+                <solid android:color="#EFEFEF"/>
+            </shape>
+
+        </inset>
+    </item>
+
+</selector>
