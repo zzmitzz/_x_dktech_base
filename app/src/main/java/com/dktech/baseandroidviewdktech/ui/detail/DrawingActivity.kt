@@ -62,9 +62,9 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
     override fun getViewBinding(): ActivityDrawingBinding = ActivityDrawingBinding.inflate(layoutInflater)
 
     override fun initData() {
-        val paintID = intent.getIntExtra(PAINTING_ID, -1)
-        if (paintID != -1) {
-            val paint = Constants.mockListData.find { it.id == paintID }
+        val paintID = intent.getStringExtra(PAINTING_ID)
+        if (paintID != null) {
+            val paint = Constants.mockListData.find { it.fileName == paintID }
             if (paint != null) {
                 preparingData(
                     fileName = paint.fileName,

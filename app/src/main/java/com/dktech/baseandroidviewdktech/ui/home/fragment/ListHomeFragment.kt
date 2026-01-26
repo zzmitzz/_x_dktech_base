@@ -14,7 +14,7 @@ import com.dktech.baseandroidviewdktech.ui.home.adapter.ItemAdapter
 import com.dktech.baseandroidviewdktech.utils.Constants
 
 class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
-    var paintID = -1
+    var paintID: String = ""
 
     private val loadingActivityLauncher =
         registerForActivityResult(
@@ -42,7 +42,7 @@ class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
         ItemAdapter(
             Constants.mockListData,
         ) { painting ->
-            paintID = painting.id
+            paintID = painting.fileName
             loadingActivityLauncher.launch(
                 Intent(requireActivity(), LoadingActivity::class.java),
             )
