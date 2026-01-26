@@ -1,10 +1,19 @@
 package com.dktech.baseandroidviewdktech.utils.helper
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import android.graphics.Picture
+import android.os.Build
+import android.os.CombinedVibration
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.text.BoringLayout
+import android.widget.Toast
+import androidx.annotation.RequiresPermission
 import androidx.core.content.edit
 import com.caverock.androidsvg.SVG
 import com.dktech.baseandroidviewdktech.base.ui_models.LanguageModel
@@ -141,3 +150,36 @@ fun Context.clearAllPrefs() {
     val prefs = getSharedPreferences(SHARE_PREFERENCES_TAG, Context.MODE_PRIVATE)
     prefs.edit().clear().apply()
 }
+
+@RequiresPermission(Manifest.permission.VIBRATE)
+fun Context.vibrate(durationMs: Long = 50L) {
+    try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vibrator = (getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager)
+            vibrator.vibrate(
+                CombinedVibration.createParallel(
+                    VibrationEffect.createOneShot(
+                        durationMs,
+                        VibrationEffect.DEFAULT_AMPLITUDE,
+                    ),
+                ),
+            )
+        } else {
+            val vibrator =
+                getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+
+            vibrator.vibrate(
+                VibrationEffect.createOneShot(
+                    durationMs,
+                    VibrationEffect.DEFAULT_AMPLITUDE,
+                ),
+            )
+        }
+    } catch (e: Exception) {
+        Toast.makeText(this, "Vibration is not supported", Toast.LENGTH_SHORT).show()
+    }
+}
+
+fun cvtFileNameIntoFillSVG(fileName: String): String = "$fileName.svg"
+
+fun cvtFileNameIntoStrokeSVG(fileName: String): String = "${fileName}_stroke.png"

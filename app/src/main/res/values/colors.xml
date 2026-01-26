@@ -5,6 +5,7 @@
     <color name="onPrimary">#FFFFFF</color>
     <color name="primaryContainer">@color/black</color>
     <color name="onPrimaryContainer">#8A8E96</color>
+    <color name="color_main">#0071C7</color>
 
     <!-- Secondary colors -->
     <color name="secondary">#5099FF</color>

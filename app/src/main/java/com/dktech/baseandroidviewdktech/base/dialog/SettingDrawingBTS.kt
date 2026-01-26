@@ -38,8 +38,8 @@ class SettingDrawingBTS constructor(
     }
 
     private fun initView() {
-        isPreviewOpen = this@SettingDrawingBTS.requireContext().getBooleanPrefs(Constants.configPreview)
-        isVibrateEnable = this@SettingDrawingBTS.requireContext().getBooleanPrefs(Constants.configVibration)
+        isPreviewOpen = this@SettingDrawingBTS.requireContext().getBooleanPrefs(Constants.CONFIG_PREVIEW)
+        isVibrateEnable = this@SettingDrawingBTS.requireContext().getBooleanPrefs(Constants.CONFIG_VIBRATION)
         updateSwitch()
     }
 

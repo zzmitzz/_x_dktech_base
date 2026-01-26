@@ -53,8 +53,12 @@ class DrawingVM : ViewModel() {
     private var _drawingUIState = MutableStateFlow<DrawingUIState>(DrawingUIState())
     val drawingUIState = _drawingUIState.asStateFlow()
 
-    private var svgFileName: String = ""
+    // Filled SVG
+    private var svgFilledFile: String = ""
     private var svgStrokeFileName: Picture? = null
+
+    // SVG File name
+    var svgFileName: String = ""
 
     private var _configUIState = MutableStateFlow<ConfigUIState>(ConfigUIState())
     val configUIState = _configUIState.asStateFlow()
@@ -65,17 +69,21 @@ class DrawingVM : ViewModel() {
 
     private lateinit var segmentLoadState: SegmentLoadState
 
-    fun updateScaleToShowPreview(value: Boolean){
+    fun updateScaleToShowPreview(value: Boolean) {
         _configUIState.value =
             _configUIState.value.copy(
-                shouldShowPreviewDueScaling = value
+                shouldShowPreviewDueScaling = value,
             )
     }
 
-    fun saveSetting(preview: Boolean, vibrate: Boolean){
+    fun saveSetting(
+        preview: Boolean,
+        vibrate: Boolean,
+    ) {
         _configUIState.value =
             _configUIState.value.copy(
-                showPreview = preview, vibratePress = vibrate
+                showPreview = preview,
+                vibratePress = vibrate,
             )
     }
 
@@ -96,14 +104,14 @@ class DrawingVM : ViewModel() {
         updateSegmentColored(segmentID)
         // update color state
 
-        viewModelScope.launch {
-            segmentLoadState.segmentColoredStateDB.insertColoredSegment(
-                ColoredSegment(
-                    fileName = svgFileName,
-                    segmentId = segmentID,
-                ),
-            )
-        }
+//        viewModelScope.launch {
+//            segmentLoadState.segmentColoredStateDB.insertColoredSegment(
+//                ColoredSegment(
+//                    fileName = svgFileName,
+//                    segmentId = segmentID,
+//                ),
+//            )
+//        }
     }
 
     // update segment color state
@@ -131,6 +139,7 @@ class DrawingVM : ViewModel() {
     fun initSegmentDraw(
         mContext: Context,
         fileName: String,
+        filledFile: String,
         strokePicture: Picture,
     ) {
         if (!::segmentLoadState.isInitialized) {
@@ -140,14 +149,15 @@ class DrawingVM : ViewModel() {
                 )
         }
 
-        svgFileName = "$fileName.svg"
+        svgFileName = fileName
+        svgFilledFile = filledFile
         svgStrokeFileName = strokePicture
 
         viewModelScope.launch {
             val svgFile =
                 segmentParser.parseSVGFile(
                     mContext,
-                    svgFileName,
+                    svgFilledFile,
                 )
             var segmentsUIState = mutableListOf<SegmentUIState>()
             svgFile.paths.forEach { group ->
@@ -222,10 +232,13 @@ class DrawingVM : ViewModel() {
     // Have to ensure the job is finished even if the viewmodel is cleared. -_-
     private var unLifeScopedCoroutine = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
-    fun onScreenLeaving(cacheDir: File, onSuccess: () -> Unit) {
+    fun onScreenLeaving(
+        cacheDir: File,
+        onSuccess: () -> Unit,
+    ) {
         unLifeScopedCoroutine.launch {
-            saveCacheThumbnail(File(cacheDir, svgFileName.replace("svg", "png")))
-            withContext(Dispatchers.Main.immediate){
+            saveCacheThumbnail(File(cacheDir, "$svgFileName.png"))
+            withContext(Dispatchers.Main.immediate) {
                 onSuccess()
             }
         }

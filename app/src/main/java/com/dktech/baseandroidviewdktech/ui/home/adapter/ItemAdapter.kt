@@ -4,18 +4,19 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.dktech.baseandroidviewdktech.base.bottomsheet.adapter.MusicAdapter
 import com.dktech.baseandroidviewdktech.databinding.ItemPaintMainBinding
-import com.dktech.baseandroidviewdktech.utils.Painting
+import com.dktech.baseandroidviewdktech.ui.home.model.PaintingUIWrapper
 import com.dktech.baseandroidviewdktech.utils.helper.setSafeOnClickListener
 
 class ItemAdapter(
-    val listItem: List<Painting>,
-    val onClick: (Painting) -> Unit,
+    val listItem: List<PaintingUIWrapper>,
+    val onClick: (PaintingUIWrapper) -> Unit,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int,
-    ): ItemViewHolder {
+    ): RecyclerView.ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
         return when (viewType) {
             1 -> {
@@ -23,7 +24,7 @@ class ItemAdapter(
             }
 
             2 -> {
-                ItemViewHolder(ItemPaintMainBinding.inflate(layoutInflater))
+                ItemLocalViewHolder(ItemPaintMainBinding.inflate(layoutInflater))
             }
 
             else -> {
@@ -36,25 +37,32 @@ class ItemAdapter(
         holder: RecyclerView.ViewHolder,
         position: Int,
     ) {
-        if (listItem[position].fileName == null) {
+        if (listItem[position].cacheThumb == null) {
             (holder as ItemViewHolder).onBind()
         } else {
-            (holder as ItemViewHolder).onBind()
-
+            (holder as ItemLocalViewHolder).onLocalBind()
         }
     }
 
     override fun getItemCount(): Int = listItem.size
 
-    override fun getItemViewType(position: Int): Int {
-        if (listItem[position].fileName == null) {
-            return 1 // This item hasn't beed downloaded
+    override fun getItemViewType(position: Int): Int =
+        if (listItem[position].cacheThumb == null) {
+            1 // This item hasn't beed downloaded
         } else {
-            return 2 // Downloaded.
+            2 // Downloaded.
+        }
+
+    inner class ItemLocalViewHolder(
+        val binding: ItemPaintMainBinding,
+    ) : RecyclerView.ViewHolder(binding.root) {
+        fun onLocalBind() {
+            val item = listItem[bindingAdapterPosition]
+            binding.root.setSafeOnClickListener {
+                onClick(item)
+            }
         }
     }
-
-    inner class ItemLocalViewHolder
 
     inner class ItemViewHolder(
         val binding: ItemPaintMainBinding,
@@ -66,7 +74,7 @@ class ItemAdapter(
             }
             Glide
                 .with(binding.root)
-                .load(item.imageThumbRemote)
+                .load(item.remoteThumb)
                 .into(binding.imageLine)
         }
     }

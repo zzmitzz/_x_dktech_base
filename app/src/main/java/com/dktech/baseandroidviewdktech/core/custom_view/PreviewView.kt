@@ -24,6 +24,11 @@ constructor(
     defStyle,
 ) {
 
+    init {
+        isClickable = false
+        isFocusable = false
+    }
+
     private var bitmap: Bitmap? = null
     private var viewportRect = RectF()
 

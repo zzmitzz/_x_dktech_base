@@ -2,8 +2,10 @@ package com.dktech.baseandroidviewdktech.ui.detail
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
+import android.view.HapticFeedbackConstants
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -16,10 +18,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.caverock.androidsvg.SVG
 import com.dktech.baseandroidviewdktech.R
 import com.dktech.baseandroidviewdktech.base.BaseActivity
+import com.dktech.baseandroidviewdktech.base.bottomsheet.SelectMusicBottomSheet
+import com.dktech.baseandroidviewdktech.base.bottomsheet.model.MusicItem
 import com.dktech.baseandroidviewdktech.base.dialog.SettingDrawingBTS
 import com.dktech.baseandroidviewdktech.core.custom_view.DrawView
+import com.dktech.baseandroidviewdktech.core.custom_view.ViewportState
 import com.dktech.baseandroidviewdktech.databinding.ActivityDrawingBinding
 import com.dktech.baseandroidviewdktech.model.ColorItem
+import com.dktech.baseandroidviewdktech.model.SegmentUIState
 import com.dktech.baseandroidviewdktech.svgparser.SegmentParser
 import com.dktech.baseandroidviewdktech.ui.detail.adapter.ColorPickerAdapter
 import com.dktech.baseandroidviewdktech.ui.finish.ResultActivity
@@ -32,6 +38,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.InputStream
+import kotlin.math.abs
 
 class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
     private val viewModel by viewModels<DrawingVM>()
@@ -49,19 +56,22 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
         FileHelper(this@DrawingActivity)
     }
 
-    override fun getViewBinding(): ActivityDrawingBinding =
-        ActivityDrawingBinding.inflate(layoutInflater)
+    private var musicPlayer: MediaPlayer? = null
+    private var selectedMusic: MusicItem? = null
+
+    override fun getViewBinding(): ActivityDrawingBinding = ActivityDrawingBinding.inflate(layoutInflater)
 
     override fun initData() {
         val paintID = intent.getIntExtra(PAINTING_ID, -1)
-        if(paintID != -1){
-            val paint = Constants.mockListData.find { it.id  == paintID}
-            if(paint != null){
+        if (paintID != -1) {
+            val paint = Constants.mockListData.find { it.id == paintID }
+            if (paint != null) {
                 preparingData(
+                    fileName = paint.fileName,
                     strokeSVG = paint.strokeFileName,
-                    fillSVG = paint.fillFileName
+                    fillSVG = paint.fillFileName,
                 )
-            }else{
+            } else {
                 Toast.makeText(this, "Couldn't find the painting, please try again later.", Toast.LENGTH_SHORT).show()
                 finish()
             }
@@ -84,55 +94,71 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
             }
         }
 
-    private fun updatePreviewBitmap() {
-        binding.imView.initBitmap("line_paint_2.png")
-    }
-
-    private val onDrawColorToSegment: ((Int) -> Unit) = { segmentID ->
-        viewModel.colorSegment(segmentID)
-        handler.removeCallbacks(saveBitmapThumbnailRunnable)
-        handler.postDelayed(saveBitmapThumbnailRunnable, 500L)
-        // update the color picker list.
-        val segment =
-            viewModel.drawingUIState.value.segmentUIState
-                .find { it.id == segmentID }
-        val colorItem = colorPickerAdapter.currentList.find { it.color == segment?.targetColor }
-        colorItem?.let {
-            if (it.freqShown == 1) {
-                val newList = colorPickerAdapter.currentList.toMutableList()
-                newList.remove(colorItem)
-                colorPickerAdapter.submitList(newList)
-                if (newList.isNotEmpty()) {
-                    viewModel.setColor(newList.first())
+    private val callbackListener =
+        object : DrawView.OnActionCallback {
+            override fun onFillColorCallback(segmentID: Int) {
+                viewModel.colorSegment(segmentID)
+                handler.removeCallbacks(saveBitmapThumbnailRunnable)
+                handler.postDelayed(saveBitmapThumbnailRunnable, 500L)
+                // update the color picker list.
+                val segment =
+                    viewModel.drawingUIState.value.segmentUIState
+                        .find { it.id == segmentID }
+                val colorItem = colorPickerAdapter.currentList.find { it.color == segment?.targetColor }
+                colorItem?.let {
+                    if (it.freqShown == 1) {
+                        val newList = colorPickerAdapter.currentList.toMutableList()
+                        newList.remove(colorItem)
+                        colorPickerAdapter.submitList(newList)
+                        if (newList.isNotEmpty()) {
+                            viewModel.setColor(newList.first())
+                        }
+                    } else {
+                        val newList = colorPickerAdapter.currentList.toMutableList()
+                        val index = colorPickerAdapter.currentList.indexOf(colorItem)
+                        newList[index] = colorItem.copy(freqShown = colorItem.freqShown - 1)
+                        colorPickerAdapter.submitList(newList)
+                    }
                 }
-            } else {
-                val newList = colorPickerAdapter.currentList.toMutableList()
-                val index = colorPickerAdapter.currentList.indexOf(colorItem)
-                newList[index] = colorItem.copy(freqShown = colorItem.freqShown - 1)
-                colorPickerAdapter.submitList(newList)
+            }
+
+            override fun onViewportChangeCallback(viewPortState: ViewportState) {
+                viewModel.updateScaleToShowPreview(
+                    viewPortState.scale > viewPortState.originalScale,
+                )
+                binding.imView.updateViewport(viewPortState)
+
+                if (abs(viewPortState.scale - viewPortState.originalScale) <= 2.0f) {
+                    binding.icZoomType.setImageResource(R.drawable.ic_zoomin)
+                } else {
+                    binding.icZoomType.setImageResource(R.drawable.ic_zoomout)
+                }
+            }
+
+            override fun onLongPressSegment(segment: SegmentUIState) {
+                val colorItem = colorPickerAdapter.currentList.find { item -> item.color == segment.targetColor }
+                colorItem?.let {
+                    viewModel.setColor(it)
+                }
+                if (viewModel.configUIState.value.vibratePress) {
+                    binding.drawview.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                }
             }
         }
-    }
 
     @SuppressLint("DefaultLocale")
     override fun initView() {
         setupColorPicker(binding.drawview)
-        binding.drawview.setCallbackOnColor(onDrawColorToSegment)
-        binding.drawview.onViewportChangeCallback = { state ->
-            viewModel.updateScaleToShowPreview(
-                state.scale > state.originalScale
-            )
-            binding.imView.updateViewport(state)
-        }
         viewModel.initConfiguration()
         viewModel.saveSetting(
-            getBooleanPrefs(Constants.configPreview, false),
-            getBooleanPrefs(Constants.configVibration, false)
+            getBooleanPrefs(Constants.CONFIG_PREVIEW, false),
+            getBooleanPrefs(Constants.CONFIG_VIBRATION, false),
         )
-        handler.postDelayed(saveBitmapThumbnailRunnable, 500L)
-
+        binding.drawview.setListenerCallback(callbackListener)
+        binding.imView.post {
+            handler.postDelayed(saveBitmapThumbnailRunnable, 500L)
+        }
     }
-
 
     private fun setupColorPicker(drawView: DrawView) {
         colorPickerAdapter =
@@ -155,18 +181,67 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
             SettingDrawingBTS(
                 initState =
                     getBooleanPrefs(
-                        Constants.configPreview,
+                        Constants.CONFIG_PREVIEW,
                         false,
-                    ) to getBooleanPrefs(Constants.configVibration, false),
+                    ) to getBooleanPrefs(Constants.CONFIG_VIBRATION, false),
                 onSave = {
-                    setBooleanPrefs(Constants.configPreview, it.first)
-                    setBooleanPrefs(Constants.configVibration, it.second)
+                    setBooleanPrefs(Constants.CONFIG_PREVIEW, it.first)
+                    setBooleanPrefs(Constants.CONFIG_VIBRATION, it.second)
                     viewModel.saveSetting(it.first, it.second)
                 },
             ).show(
                 supportFragmentManager,
                 "SettingDrawingBTS",
             )
+        }
+        binding.icZoom.setOnClickListener {
+            val currentViewport = binding.drawview.getCurrentViewportState()
+            currentViewport?.let { viewport ->
+                if (abs(viewport.scale - viewport.originalScale) > 2.0f) {
+                    binding.drawview.setScale(viewport.originalScale)
+                } else {
+                    binding.drawview.setScale(10f)
+                }
+            }
+        }
+        binding.icMusic.setSafeOnClickListener {
+            val bottomSheet =
+                SelectMusicBottomSheet(
+                    currentSelectedMusic = selectedMusic,
+                ) { musicItem ->
+                    selectedMusic = musicItem
+                    playSelectedMusic(musicItem)
+                }
+            bottomSheet.show(supportFragmentManager, "SelectMusicBottomSheet")
+        }
+    }
+
+    private fun playSelectedMusic(musicItem: MusicItem?) {
+        musicPlayer?.release()
+        musicPlayer = null
+
+        if (musicItem == null) {
+            return
+        }
+
+        try {
+            musicPlayer =
+                if (musicItem.resourceId != null) {
+                    MediaPlayer.create(this, musicItem.resourceId!!).apply {
+                        isLooping = true
+                        setOnCompletionListener {
+                            release()
+                            musicPlayer = null
+                        }
+                        start()
+                    }
+                } else {
+                    null
+                }
+        } catch (e: Exception) {
+            musicPlayer?.release()
+            musicPlayer = null
+            Toast.makeText(this, "Failed to play music", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -181,6 +256,21 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
 
     override fun onStop() {
         super.onStop()
+        binding.drawview.removeListenerCallback()
+        musicPlayer?.pause()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        musicPlayer?.release()
+        musicPlayer = null
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (selectedMusic != null && musicPlayer != null && !musicPlayer!!.isPlaying) {
+            musicPlayer?.start()
+        }
     }
 
     private fun finishDrawEffect() {
@@ -211,21 +301,28 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
                         binding.drawview.setSelectedColor(it.currentSelectedColor.color)
                         colorPickerAdapter.updateSelectedPos(it.currentSelectedColor)
                     }
-                    binding.previewView.visibility =
-                        if (it.showPreview && it.shouldShowPreviewDueScaling) View.VISIBLE else View.GONE
-
+                    if (it.showPreview && it.shouldShowPreviewDueScaling) {
+                        binding.imView.initBitmap(viewModel.svgFileName + ".png")
+                        binding.previewView.visibility = View.VISIBLE
+                    } else {
+                        binding.previewView.visibility = View.INVISIBLE
+                    }
                 }
             }
         }
     }
 
+    private fun updatePreviewBitmap() {
+        binding.imView.initBitmap(viewModel.svgFileName + ".png")
+    }
+
     private fun preparingData(
-        fileName: String = "line_paint_2",
-        strokeSVG: String = "line_paint_2_stroke.svg",
-        fillSVG: String = "line_paint_2.svg",
+        fileName: String,
+        strokeSVG: String,
+        fillSVG: String,
     ) {
         val strokePicture = fileHelper.parseAssetFileToPicture(strokeSVG)
-        viewModel.initSegmentDraw(this@DrawingActivity, fillSVG, strokePicture)
+        viewModel.initSegmentDraw(this@DrawingActivity, fileName, fillSVG, strokePicture)
         binding.drawview.loadStrokeSvgFromResource(strokePicture)
     }
 }

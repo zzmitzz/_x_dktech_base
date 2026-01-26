@@ -25,7 +25,7 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -47,7 +47,6 @@ dependencies {
 
     val roomVersion = "2.7.0" // Use the latest stable version
 
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -64,10 +63,9 @@ dependencies {
     implementation(libs.material.v1130)
     implementation("com.caverock:androidsvg-aar:1.4")
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
-
+    implementation("com.airbnb.android:lottie:6.7.1")
 
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
-
 }

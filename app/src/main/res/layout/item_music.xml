@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mainContent"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="6dp">
+
+    <ImageView
+        android:id="@+id/iconAvatar"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:adjustViewBounds="true"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_music_bottomsheet"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+    <ImageView
+        android:id="@+id/iconPlayPause"
+        app:layout_constraintTop_toTopOf="@id/iconAvatar"
+        app:layout_constraintBottom_toBottomOf="@id/iconAvatar"
+        app:layout_constraintStart_toStartOf="@id/iconAvatar"
+        android:layout_marginTop="@dimen/dp4"
+        android:layout_marginStart="@dimen/dp2"
+        app:layout_constraintEnd_toEndOf="@id/iconAvatar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_play_bottomsheet"/>
+    <LinearLayout
+        android:id="@+id/ln1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnRemove"
+        app:layout_constraintStart_toEndOf="@id/iconAvatar"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tvMusic"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/inter_semibold"
+            android:text="Jingle Bell"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:textColor="#161616"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tvArtistName"
+            android:layout_width="match_parent"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/nunito_semibold"
+            android:text="Artist Name"
+            android:textColor="#525252"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/btnUse"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/dp36"
+        android:background="@drawable/bg_radius_full"
+        android:backgroundTint="@color/color_main"
+        android:fontFamily="@font/nunito_bold"
+        android:gravity="center"
+        android:paddingHorizontal="16dp"
+        android:text="@string/use"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/btnRemove"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/dp36"
+        android:background="@drawable/bg_radius_full_stroke"
+        android:fontFamily="@font/inter_semibold"
+        android:gravity="center"
+        android:paddingHorizontal="16dp"
+        android:text="@string/remove"
+        android:textColor="@color/black"
+        android:visibility="invisible"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+

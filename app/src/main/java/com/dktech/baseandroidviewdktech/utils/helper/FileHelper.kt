@@ -32,7 +32,4 @@ class FileHelper(
             e.printStackTrace()
             null
         }
-
-
-
 }

@@ -36,226 +36,328 @@ data class ViewportState(
 )
 
 class DrawView
-@JvmOverloads
-constructor(
-    mContext: Context,
-    attr: AttributeSet? = null,
-    defStyle: Int = 0,
-) : View(
-    mContext,
-    attr,
-    defStyle,
-) {
-    var onFillColorCallback: ((Int) -> Unit)? = null
-    var onViewportChangeCallback: ((ViewportState) -> Unit)? = null
+    @JvmOverloads
+    constructor(
+        mContext: Context,
+        attr: AttributeSet? = null,
+        defStyle: Int = 0,
+    ) : View(
+            mContext,
+            attr,
+            defStyle,
+        ) {
+        interface OnActionCallback {
+            fun onFillColorCallback(segmentID: Int): Unit
 
-    private val segmentUIStates = mutableListOf<SegmentUIState>()
-    private var selectedColor: Int = Color.RED
-    private var selectedOriginalColor: Int? = null
-    private var selectedLayerNumber: Int = -1
+            fun onViewportChangeCallback(viewPortState: ViewportState): Unit
 
-    private val bitmapPaint =
-        Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            isFilterBitmap = false
-            isDither = false
+            fun onLongPressSegment(segment: SegmentUIState): Unit
         }
-    private var svgBounds = RectF()
-    private val overlayMatrix = Matrix()
 
-    private var strokeSvgPicture: Picture? = null
-    private val strokeMatrix = Matrix()
+        private var listenerComponent: OnActionCallback? = null
 
-    private val viewMatrix = Matrix()
-    private val inverseMatrix = Matrix()
+        private val segmentUIStates = mutableListOf<SegmentUIState>()
+        private var selectedColor: Int = Color.RED
+        private var selectedOriginalColor: Int? = null
+        private var selectedLayerNumber: Int = -1
 
-    private var lastFocusX = 0f
-    private var lastFocusY = 0f
+        private val bitmapPaint =
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                isFilterBitmap = false
+                isDither = false
+            }
+        private var svgBounds = RectF()
+        private val overlayMatrix = Matrix()
 
-    private val drawnLayerNumbers = mutableSetOf<Int>()
-    private val visibleBounds = Rect()
-    private var isGestureInProgress = false
-    private val textMeasurementCache = mutableMapOf<String, Float>()
+        private var strokeSvgPicture: Picture? = null
+        private val strokeMatrix = Matrix()
 
-    private var minScaleFactor = 0.5f
-    private var isInitialSetupDone = false
+        private val viewMatrix = Matrix()
+        private val inverseMatrix = Matrix()
 
-    private var cachedCanvasBitmap: Bitmap? = null
-    private var cachedCanvasBitmapCanvas: Canvas? = null
-    private var isCacheValid = false
+        private var lastFocusX = 0f
+        private var lastFocusY = 0f
 
-    private val scaleDetector: ScaleGestureDetector by lazy {
-        ScaleGestureDetector(
-            context,
-            object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
-                override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
-                    isGestureInProgress = true
-                    setLayerType(LAYER_TYPE_HARDWARE, null)
-                    lastFocusX = detector.focusX
-                    lastFocusY = detector.focusY
-                    return true
-                }
+        private val drawnLayerNumbers = mutableSetOf<Int>()
+        private val visibleBounds = Rect()
+        private var isGestureInProgress = false
+        private val textMeasurementCache = mutableMapOf<String, Float>()
 
-                override fun onScale(detector: ScaleGestureDetector): Boolean {
-                    val scaleFactor = detector.scaleFactor
+        private var minScaleFactor = 0.5f
+        private var isInitialSetupDone = false
 
-                    val focusX = detector.focusX
-                    val focusY = detector.focusY
+        private var cachedCanvasBitmap: Bitmap? = null
+        private var cachedCanvasBitmapCanvas: Canvas? = null
+        private var isCacheValid = false
 
-                    viewMatrix.postScale(scaleFactor, scaleFactor, focusX, focusY)
+        val fillPaint =
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.FILL
+                color = Color.WHITE
+            }
 
-                    val values = FloatArray(9)
-                    viewMatrix.getValues(values)
-                    val currentScale = values[Matrix.MSCALE_X]
-
-                    if (currentScale !in minScaleFactor..30f) {
-                        viewMatrix.postScale(1f / scaleFactor, 1f / scaleFactor, focusX, focusY)
-                    }
-
-                    constrainViewMatrix()
-                    notifyViewportChange()
-
-                    lastFocusX = focusX
-                    lastFocusY = focusY
-                    invalidate()
-                    return true
-                }
-
-                override fun onScaleEnd(detector: ScaleGestureDetector) {
-                    isGestureInProgress = false
-                    setLayerType(LAYER_TYPE_NONE, null)
-                    invalidate()
-                }
-            },
-        )
+        private val textureBitmap: Bitmap by lazy {
+        BitmapFactory.decodeResource(resources, com.dktech.baseandroidviewdktech.R.drawable.placeholder_texture)
     }
 
-    fun setCallbackOnColor(a: (Int) -> Unit) {
-        this.onFillColorCallback = a
+    private val texturePaint: Paint by lazy {
+        Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.FILL
+            val shader = android.graphics.BitmapShader(
+                textureBitmap,
+                android.graphics.Shader.TileMode.REPEAT,
+                android.graphics.Shader.TileMode.REPEAT
+            )
+            val matrix = Matrix()
+            matrix.setScale(0.1f, 0.1f)
+            shader.setLocalMatrix(matrix)
+            this.shader = shader
+        }
     }
 
+        val textPaint =
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.FILL
+                color = Color.BLACK
+                textAlign = Paint.Align.CENTER
+                textSize = 24f
+            }
 
-    private val gestureDetector: GestureDetector by lazy {
-        GestureDetector(
-            context,
-            object : GestureDetector.SimpleOnGestureListener() {
-                override fun onDown(e: MotionEvent): Boolean {
-                    setLayerType(LAYER_TYPE_HARDWARE, null)
-                    return true
-                }
-
-                override fun onScroll(
-                    e1: MotionEvent?,
-                    e2: MotionEvent,
-                    distanceX: Float,
-                    distanceY: Float,
-                ): Boolean {
-                    if (!scaleDetector.isInProgress) {
+        private val scaleDetector: ScaleGestureDetector by lazy {
+            ScaleGestureDetector(
+                context,
+                object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+                    override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
                         isGestureInProgress = true
+                        setLayerType(LAYER_TYPE_HARDWARE, null)
+                        lastFocusX = detector.focusX
+                        lastFocusY = detector.focusY
+                        return true
                     }
-                    viewMatrix.postTranslate(-distanceX, -distanceY)
-                    constrainViewMatrix()
-                    notifyViewportChange()
-                    invalidate()
-                    return true
-                }
-            },
-        )
-    }
 
-    val fillPaint =
-        Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.FILL
-            color = Color.WHITE
+                    override fun onScale(detector: ScaleGestureDetector): Boolean {
+                        val scaleFactor = detector.scaleFactor
+
+                        val focusX = detector.focusX
+                        val focusY = detector.focusY
+
+                        viewMatrix.postScale(scaleFactor, scaleFactor, focusX, focusY)
+
+                        val values = FloatArray(9)
+                        viewMatrix.getValues(values)
+                        val currentScale = values[Matrix.MSCALE_X]
+
+                        if (currentScale !in minScaleFactor..30f) {
+                            viewMatrix.postScale(1f / scaleFactor, 1f / scaleFactor, focusX, focusY)
+                        }
+
+                        constrainViewMatrix()
+                        notifyViewportChange()
+
+                        lastFocusX = focusX
+                        lastFocusY = focusY
+                        invalidate()
+                        return true
+                    }
+
+                    override fun onScaleEnd(detector: ScaleGestureDetector) {
+                        isGestureInProgress = false
+                        setLayerType(LAYER_TYPE_NONE, null)
+                        invalidate()
+                    }
+                },
+            )
         }
 
-    val gridPaint =
-        Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.STROKE
-            color = Color.BLUE
-            strokeWidth = 1f
+        private val gestureDetector: GestureDetector by lazy {
+            GestureDetector(
+                context,
+                object : GestureDetector.SimpleOnGestureListener() {
+                    override fun onDown(e: MotionEvent): Boolean {
+                        setLayerType(LAYER_TYPE_HARDWARE, null)
+                        if (!scaleDetector.isInProgress) {
+                            viewMatrix.invert(inverseMatrix)
+
+                            val pts = floatArrayOf(e.x, e.y)
+                            inverseMatrix.mapPoints(pts)
+
+                            val x = pts[0].toInt()
+                            val y = pts[1].toInt()
+
+                            segmentUIStates.reversed().forEach { uiState ->
+                                if (uiState.segment.region.contains(x, y) && !uiState.isColored) {
+                                    if (selectedOriginalColor != null && uiState.segment.originalColor == selectedOriginalColor) {
+                                        listenerComponent?.onFillColorCallback(uiState.id)
+                                    }
+                                }
+                                return@forEach
+                            }
+                        }
+                        return true
+                    }
+
+                    override fun onScroll(
+                        e1: MotionEvent?,
+                        e2: MotionEvent,
+                        distanceX: Float,
+                        distanceY: Float,
+                    ): Boolean {
+                        if (!scaleDetector.isInProgress) {
+                            isGestureInProgress = true
+                        }
+                        viewMatrix.postTranslate(-distanceX, -distanceY)
+                        constrainViewMatrix()
+                        notifyViewportChange()
+                        invalidate()
+                        return true
+                    }
+
+                    override fun onLongPress(e: MotionEvent) {
+                        super.onLongPress(e)
+                        if (!scaleDetector.isInProgress) {
+                            viewMatrix.invert(inverseMatrix)
+
+                            val pts = floatArrayOf(e.x, e.y)
+                            inverseMatrix.mapPoints(pts)
+
+                            val x = pts[0].toInt()
+                            val y = pts[1].toInt()
+
+                            segmentUIStates.reversed().forEach { uiState ->
+                                if (uiState.segment.region.contains(x, y) && !uiState.isColored) {
+                                    listenerComponent?.onLongPressSegment(uiState)
+                                }
+                                return@forEach
+                            }
+                        }
+                    }
+                },
+            )
         }
 
-    val textPaint =
-        Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.FILL
-            color = Color.BLACK
-            textAlign = Paint.Align.CENTER
-            textSize = 24f
+        public fun setListenerCallback(callback: OnActionCallback) {
+            listenerComponent = callback
         }
 
-    override fun onMeasure(
-        widthMeasureSpec: Int,
-        heightMeasureSpec: Int,
-    ) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-    }
-
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super.onSizeChanged(w, h, oldw, oldh)
-        if (w > 0 && h > 0 && !svgBounds.isEmpty) {
-            setupInitialTransform()
+        public fun removeListenerCallback() {
+            listenerComponent = null
         }
-    }
 
-    private fun setupInitialTransform() {
-        if (width <= 0 || height <= 0 || svgBounds.isEmpty) return
+        override fun onMeasure(
+            widthMeasureSpec: Int,
+            heightMeasureSpec: Int,
+        ) {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        }
 
-        val svgWidth = svgBounds.width()
-        val svgHeight = svgBounds.height()
+        override fun onSizeChanged(
+            w: Int,
+            h: Int,
+            oldw: Int,
+            oldh: Int,
+        ) {
+            super.onSizeChanged(w, h, oldw, oldh)
+            if (w > 0 && h > 0 && !svgBounds.isEmpty) {
+                setupInitialTransform()
+            }
+        }
 
-        val scaleX = width.toFloat() / svgWidth
-        val scaleY = height.toFloat() / svgHeight
-        val fitScale = minOf(scaleX, scaleY)
+        private fun setupInitialTransform() {
+            if (width <= 0 || height <= 0 || svgBounds.isEmpty) return
 
-        minScaleFactor = fitScale * 0.9f
+            val svgWidth = svgBounds.width()
+            val svgHeight = svgBounds.height()
 
-        val scaledWidth = svgWidth * fitScale
-        val scaledHeight = svgHeight * fitScale
-        val translateX = (width - scaledWidth) / 2f
-        val translateY = (height - scaledHeight) / 2f
+            val scaleX = width.toFloat() / svgWidth
+            val scaleY = height.toFloat() / svgHeight
+            val fitScale = minOf(scaleX, scaleY)
 
-        viewMatrix.reset()
-        viewMatrix.postScale(fitScale, fitScale)
-        viewMatrix.postTranslate(translateX, translateY)
+            minScaleFactor = fitScale * 0.9f
 
-        isInitialSetupDone = true
-        notifyViewportChange()
-    }
+            val scaledWidth = svgWidth * fitScale
+            val scaledHeight = svgHeight * fitScale
+            val translateX = (width - scaledWidth) / 2f
+            val translateY = (height - scaledHeight) / 2f
 
-    private fun constrainViewMatrix() {
-        if (width <= 0 || height <= 0 || svgBounds.isEmpty) return
+            viewMatrix.reset()
+            viewMatrix.postScale(fitScale, fitScale)
+            viewMatrix.postTranslate(translateX, translateY)
 
-        val values = FloatArray(9)
-        viewMatrix.getValues(values)
+            isInitialSetupDone = true
+            notifyViewportChange()
+        }
 
-        val currentScale = values[Matrix.MSCALE_X]
-        var translateX = values[Matrix.MTRANS_X]
-        var translateY = values[Matrix.MTRANS_Y]
+        private fun constrainViewMatrix() {
+            if (width <= 0 || height <= 0 || svgBounds.isEmpty) return
 
-        val scaledSvgWidth = svgBounds.width() * currentScale
-        val scaledSvgHeight = svgBounds.height() * currentScale
+            val values = FloatArray(9)
+            viewMatrix.getValues(values)
 
-        val minTranslateX = width / 2f - scaledSvgWidth
-        val maxTranslateX = width / 2f
-        val minTranslateY = height / 2f - scaledSvgHeight
-        val maxTranslateY = height / 2f
+            val currentScale = values[Matrix.MSCALE_X]
+            var translateX = values[Matrix.MTRANS_X]
+            var translateY = values[Matrix.MTRANS_Y]
 
-        translateX = translateX.coerceIn(minTranslateX, maxTranslateX)
-        translateY = translateY.coerceIn(minTranslateY, maxTranslateY)
+            val scaledSvgWidth = svgBounds.width() * currentScale
+            val scaledSvgHeight = svgBounds.height() * currentScale
 
-        values[Matrix.MTRANS_X] = translateX
-        values[Matrix.MTRANS_Y] = translateY
-        viewMatrix.setValues(values)
-    }
+            val minTranslateX = width / 2f - scaledSvgWidth
+            val maxTranslateX = width / 2f
+            val minTranslateY = height / 2f - scaledSvgHeight
+            val maxTranslateY = height / 2f
 
-    private fun notifyViewportChange() {
-        if (width <= 0 || height <= 0 || svgBounds.isEmpty) return
+            translateX = translateX.coerceIn(minTranslateX, maxTranslateX)
+            translateY = translateY.coerceIn(minTranslateY, maxTranslateY)
 
-        val values = FloatArray(9)
-        viewMatrix.getValues(values)
+            values[Matrix.MTRANS_X] = translateX
+            values[Matrix.MTRANS_Y] = translateY
+            viewMatrix.setValues(values)
+        }
 
-        onViewportChangeCallback?.invoke(
-            ViewportState(
+        private fun notifyViewportChange() {
+            if (width <= 0 || height <= 0 || svgBounds.isEmpty) return
+
+            val values = FloatArray(9)
+            viewMatrix.getValues(values)
+
+            listenerComponent?.onViewportChangeCallback(
+                ViewportState(
+                    scale = values[Matrix.MSCALE_X],
+                    translateX = values[Matrix.MTRANS_X],
+                    translateY = values[Matrix.MTRANS_Y],
+                    svgWidth = svgBounds.width(),
+                    svgHeight = svgBounds.height(),
+                    viewWidth = width,
+                    viewHeight = height,
+                    originalScale = minScaleFactor / 0.9f,
+                ),
+            )
+        }
+
+        fun setScale(targetScale: Float) {
+            if (width <= 0 || height <= 0 || svgBounds.isEmpty) return
+
+            val values = FloatArray(9)
+            viewMatrix.getValues(values)
+            val currentScale = values[Matrix.MSCALE_X]
+
+            val centerX = width / 2f
+            val centerY = height / 2f
+
+            val scaleFactor = targetScale / currentScale
+            viewMatrix.postScale(scaleFactor, scaleFactor, centerX, centerY)
+
+            constrainViewMatrix()
+            notifyViewportChange()
+            invalidate()
+        }
+
+        fun getCurrentViewportState(): ViewportState? {
+            if (width <= 0 || height <= 0 || svgBounds.isEmpty) return null
+
+            val values = FloatArray(9)
+            viewMatrix.getValues(values)
+
+            return ViewportState(
                 scale = values[Matrix.MSCALE_X],
                 translateX = values[Matrix.MTRANS_X],
                 translateY = values[Matrix.MTRANS_Y],
@@ -263,169 +365,163 @@ constructor(
                 svgHeight = svgBounds.height(),
                 viewWidth = width,
                 viewHeight = height,
-                originalScale = minScaleFactor / 0.9f
+                originalScale = minScaleFactor / 0.9f,
             )
-        )
-    }
-
-    fun initSegmentFile(
-        svgWidth: Float,
-        svgHeight: Float,
-        segments: List<SegmentUIState>,
-    ) {
-        // Small trick to not apply the re-init the matrix since it reset the view
-        val shouldInitMatrix = segmentUIStates.isEmpty()
-        segmentUIStates.clear()
-        segmentUIStates.addAll(segments)
-        svgBounds.set(0f, 0f, svgWidth, svgHeight)
-        isInitialSetupDone = false
-        if (width > 0 && height > 0 && shouldInitMatrix) {
-            setupInitialTransform()
         }
-        invalidateCache()
-        invalidate()
-    }
 
-    fun invalidateCache() {
-        isCacheValid = false
-    }
-
-    private fun ensureCacheBitmap() {
-        if (svgBounds.isEmpty) return
-
-        val width = svgBounds.width().toInt()
-        val height = svgBounds.height().toInt()
-
-        if (cachedCanvasBitmap == null ||
-            cachedCanvasBitmap?.width != width ||
-            cachedCanvasBitmap?.height != height
+        fun initSegmentFile(
+            svgWidth: Float,
+            svgHeight: Float,
+            segments: List<SegmentUIState>,
         ) {
-            cachedCanvasBitmap?.recycle()
-            cachedCanvasBitmap = createBitmap(width, height)
-            cachedCanvasBitmapCanvas = Canvas(cachedCanvasBitmap!!)
+            // Small trick to not apply the re-init the matrix since it reset the view
+            val shouldInitMatrix = segmentUIStates.isEmpty()
+            segmentUIStates.clear()
+            segmentUIStates.addAll(segments)
+            svgBounds.set(0f, 0f, svgWidth, svgHeight)
+            isInitialSetupDone = false
+            if (width > 0 && height > 0 && shouldInitMatrix) {
+                setupInitialTransform()
+            }
+            invalidateCache()
+            invalidate()
+        }
+
+        fun invalidateCache() {
             isCacheValid = false
         }
-    }
 
-    private fun updateCacheBitmap() {
-        ensureCacheBitmap()
+        private fun ensureCacheBitmap() {
+            if (svgBounds.isEmpty) return
 
-        val bitmap = cachedCanvasBitmap ?: return
-        val cacheCanvas = cachedCanvasBitmapCanvas ?: return
+            val width = svgBounds.width().toInt()
+            val height = svgBounds.height().toInt()
 
-        bitmap.eraseColor(Color.TRANSPARENT)
-
-        segmentUIStates.forEach { uiState ->
-            fillPaint.color = if (!uiState.isColored) Color.WHITE else uiState.targetColor
-            cacheCanvas.drawPath(uiState.segment.path, fillPaint)
-        }
-        strokeSvgPicture?.let { picture ->
-            cacheCanvas.withMatrix(strokeMatrix) {
-                drawPicture(picture)
+            if (cachedCanvasBitmap == null ||
+                cachedCanvasBitmap?.width != width ||
+                cachedCanvasBitmap?.height != height
+            ) {
+                cachedCanvasBitmap?.recycle()
+                cachedCanvasBitmap = createBitmap(width, height)
+                cachedCanvasBitmapCanvas = Canvas(cachedCanvasBitmap!!)
+                isCacheValid = false
             }
         }
 
-        isCacheValid = true
-    }
+        private fun updateCacheBitmap() {
+            ensureCacheBitmap()
 
-    fun loadStrokeSvgFromResource(asset: Picture) {
-        try {
-            strokeSvgPicture = asset
-            updateStrokeMatrix()
-            invalidate()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
+            val bitmap = cachedCanvasBitmap ?: return
+            val cacheCanvas = cachedCanvasBitmapCanvas ?: return
 
-    private fun updateStrokeMatrix() {
-        if (svgBounds.isEmpty) return
+            bitmap.eraseColor(Color.TRANSPARENT)
 
-        val svgWidth = svgBounds.width()
-        val svgHeight = svgBounds.height()
-
-        strokeSvgPicture?.let { picture ->
-            val scaleX = svgWidth / picture.width
-            val scaleY = svgHeight / picture.height
-            strokeMatrix.reset()
-            strokeMatrix.postScale(scaleX, scaleY)
-            strokeMatrix.postTranslate(svgBounds.left, svgBounds.top)
-        }
-    }
-
-    fun clearStrokeOverlay() {
-        strokeSvgPicture = null
-        invalidate()
-    }
-
-    fun setSelectedColor(color: Int) {
-        selectedColor = color
-        selectedOriginalColor =
-            segmentUIStates
-                .firstOrNull { it.segment.originalColor == color }
-                ?.segment
-                ?.originalColor
-        updateSelectedLayerNumber()
-        invalidate()
-    }
-
-    private fun updateSelectedLayerNumber() {
-        selectedLayerNumber = segmentUIStates
-            .firstOrNull { it.segment.originalColor == selectedColor }
-            ?.layerNumber ?: -1
-    }
-
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        val scaleHandled = scaleDetector.onTouchEvent(event)
-        val gestureHandled = gestureDetector.onTouchEvent(event)
-
-        when (event.actionMasked) {
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                if (isGestureInProgress) {
-                    isGestureInProgress = false
-                    setLayerType(LAYER_TYPE_NONE, null)
-                    invalidate()
+            segmentUIStates.forEach { uiState ->
+                fillPaint.color = if (!uiState.isColored) Color.WHITE else uiState.targetColor
+                cacheCanvas.drawPath(uiState.segment.path, fillPaint)
+            }
+            strokeSvgPicture?.let { picture ->
+                cacheCanvas.withMatrix(strokeMatrix) {
+                    drawPicture(picture)
                 }
             }
 
-            MotionEvent.ACTION_DOWN -> {
-                if (!scaleDetector.isInProgress) {
-                    viewMatrix.invert(inverseMatrix)
+            isCacheValid = true
+        }
 
-                    val pts = floatArrayOf(event.x, event.y)
-                    inverseMatrix.mapPoints(pts)
+        fun loadStrokeSvgFromResource(asset: Picture) {
+            try {
+                strokeSvgPicture = asset
+                updateStrokeMatrix()
+                invalidate()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
 
-                    val x = pts[0].toInt()
-                    val y = pts[1].toInt()
+        private fun updateStrokeMatrix() {
+            if (svgBounds.isEmpty) return
 
-                    segmentUIStates.reversed().forEach { uiState ->
-                        if (uiState.segment.region.contains(x, y) && !uiState.isColored) {
-                            if (selectedOriginalColor != null && uiState.segment.originalColor == selectedOriginalColor) {
-                                onFillColorCallback?.invoke(uiState.id)
-                            }
-                        }
-                        return@forEach
+            val svgWidth = svgBounds.width()
+            val svgHeight = svgBounds.height()
+
+            strokeSvgPicture?.let { picture ->
+                val scaleX = svgWidth / picture.width
+                val scaleY = svgHeight / picture.height
+                strokeMatrix.reset()
+                strokeMatrix.postScale(scaleX, scaleY)
+                strokeMatrix.postTranslate(svgBounds.left, svgBounds.top)
+            }
+        }
+
+        fun clearStrokeOverlay() {
+            strokeSvgPicture = null
+            invalidate()
+        }
+
+        fun setSelectedColor(color: Int) {
+            selectedColor = color
+            selectedOriginalColor =
+                segmentUIStates
+                    .firstOrNull { it.segment.originalColor == color }
+                    ?.segment
+                    ?.originalColor
+            updateSelectedLayerNumber()
+            invalidate()
+        }
+
+        private fun updateSelectedLayerNumber() {
+            selectedLayerNumber = segmentUIStates
+                .firstOrNull { it.segment.originalColor == selectedColor }
+                ?.layerNumber ?: -1
+        }
+
+        override fun onTouchEvent(event: MotionEvent): Boolean {
+            val scaleHandled = scaleDetector.onTouchEvent(event)
+            val gestureHandled = gestureDetector.onTouchEvent(event)
+
+            when (event.actionMasked) {
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    if (isGestureInProgress) {
+                        isGestureInProgress = false
+                        setLayerType(LAYER_TYPE_NONE, null)
+                        invalidate()
                     }
                 }
-                return true
             }
+            return scaleHandled || gestureHandled || super.onTouchEvent(event)
         }
-        return scaleHandled || gestureHandled || super.onTouchEvent(event)
-    }
 
-    override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
+        override fun onDraw(canvas: Canvas) {
+            super.onDraw(canvas)
 
-        drawnLayerNumbers.clear()
+            drawnLayerNumbers.clear()
 
-        if (isGestureInProgress) {
-            if (!isCacheValid) {
-                updateCacheBitmap()
-            }
-            cachedCanvasBitmap?.let { bitmap ->
+            if (isGestureInProgress) {
+                if (!isCacheValid) {
+                    updateCacheBitmap()
+                }
+                cachedCanvasBitmap?.let { bitmap ->
+                    canvas.withMatrix(viewMatrix) {
+                        drawBitmap(bitmap, 0f, 0f, bitmapPaint)
+                        segmentUIStates.forEach { uiState ->
+                            if (selectedLayerNumber > 0 &&
+                                uiState.layerNumber == selectedLayerNumber &&
+                                !uiState.isColored
+                            ) {
+                                drawGridOverlay(this, uiState.segment)
+                            }
+                            if (shouldShowLayerNumber(uiState)) {
+                                drawLayerNumber(this, uiState)
+                            }
+                        }
+                    }
+                }
+            } else {
                 canvas.withMatrix(viewMatrix) {
-                    drawBitmap(bitmap, 0f, 0f, bitmapPaint)
                     segmentUIStates.forEach { uiState ->
+                        fillPaint.color = if (!uiState.isColored) Color.WHITE else uiState.targetColor
+                        drawPath(uiState.segment.path, fillPaint)
                         if (selectedLayerNumber > 0 &&
                             uiState.layerNumber == selectedLayerNumber &&
                             !uiState.isColored
@@ -436,117 +532,79 @@ constructor(
                             drawLayerNumber(this, uiState)
                         }
                     }
-                }
-            }
-        } else {
-            canvas.withMatrix(viewMatrix) {
-                segmentUIStates.forEach { uiState ->
-                    fillPaint.color = if (!uiState.isColored) Color.WHITE else uiState.targetColor
-                    drawPath(uiState.segment.path, fillPaint)
-                    if (selectedLayerNumber > 0 &&
-                        uiState.layerNumber == selectedLayerNumber &&
-                        !uiState.isColored
-                    ) {
-                        drawGridOverlay(this, uiState.segment)
-                    }
-                    if (shouldShowLayerNumber(uiState)) {
-                        drawLayerNumber(this, uiState)
-                    }
-                }
 
-                strokeSvgPicture?.let { picture ->
-                    canvas.withMatrix(strokeMatrix) {
-                        drawPicture(picture)
+                    strokeSvgPicture?.let { picture ->
+                        canvas.withMatrix(strokeMatrix) {
+                            drawPicture(picture)
+                        }
                     }
                 }
             }
         }
-    }
 
-    private fun updateVisibleBounds() {
-        visibleBounds.set(0, 0, width, height)
-        val tempMatrix = Matrix()
-        viewMatrix.invert(tempMatrix)
-        tempMatrix.mapRect(RectF(visibleBounds))
-    }
-
-    private fun isSegmentVisible(bounds: Rect): Boolean = Rect.intersects(visibleBounds, bounds)
-
-    private fun drawGridOverlay(
-        canvas: Canvas,
-        segment: Segments,
-    ) {
-        val bounds = segment.region.bounds
-        val gridSize = 5f
-        canvas.withClip(segment.path) {
-            var x = bounds.left.toFloat()
-            while (x <= bounds.right) {
-                drawLine(x, bounds.top.toFloat(), x, bounds.bottom.toFloat(), gridPaint)
-                x += gridSize
-            }
-
-            var y = bounds.top.toFloat()
-            while (y <= bounds.bottom) {
-                drawLine(bounds.left.toFloat(), y, bounds.right.toFloat(), y, gridPaint)
-                y += gridSize
+        private fun drawGridOverlay(
+            canvas: Canvas,
+            segment: Segments,
+        ) {
+            canvas.withClip(segment.path) {
+                drawPaint(texturePaint)
             }
         }
-    }
 
-    private fun shouldShowLayerNumber(uiState: SegmentUIState): Boolean {
-        val segment = uiState.segment
-        val bounds = segment.region.bounds
-        val textSize = bounds.width().coerceAtMost(bounds.height()) / 3f
+        private fun shouldShowLayerNumber(uiState: SegmentUIState): Boolean {
+            val segment = uiState.segment
+            val bounds = segment.region.bounds
+            val textSize = bounds.width().coerceAtMost(bounds.height()) / 3f
 
-        val values = FloatArray(9)
-        viewMatrix.getValues(values)
-        val currentScale = values[Matrix.MSCALE_X]
-        val scaledTextSize = textSize * currentScale
+            val values = FloatArray(9)
+            viewMatrix.getValues(values)
+            val currentScale = values[Matrix.MSCALE_X]
+            val scaledTextSize = textSize * currentScale
 
-        val minTextSize = 12f
-        if (scaledTextSize < minTextSize) {
-            return false
+            val minTextSize = 12f
+            if (scaledTextSize < minTextSize) {
+                return false
+            }
+
+            val text = uiState.layerNumber.toString()
+            val cacheKey = "$text-$textSize"
+            val textWidth =
+                textMeasurementCache.getOrPut(cacheKey) {
+                    textPaint.textSize = textSize
+                    textPaint.measureText(text)
+                } * currentScale
+
+            textPaint.textSize = textSize
+            val textHeight = (textPaint.descent() - textPaint.ascent()) * currentScale
+
+            val scaledWidth = bounds.width() * currentScale
+            val scaledHeight = bounds.height() * currentScale
+
+            return textWidth <= scaledWidth * 0.8f && textHeight <= scaledHeight * 0.8f && !uiState.isColored
         }
 
-        val text = uiState.layerNumber.toString()
-        val cacheKey = "$text-$textSize"
-        val textWidth =
-            textMeasurementCache.getOrPut(cacheKey) {
-                textPaint.textSize = textSize
-                textPaint.measureText(text)
-            } * currentScale
+        private fun drawLayerNumber(
+            canvas: Canvas,
+            uiState: SegmentUIState,
+        ) {
+            val segment = uiState.segment
+            val bounds = segment.region.bounds
+            val textSize = bounds.width().coerceAtMost(bounds.height()) / 4f
+            textPaint.textSize = textSize
 
-        textPaint.textSize = textSize
-        val textHeight = (textPaint.descent() - textPaint.ascent()) * currentScale
+            val text = uiState.layerNumber.toString()
+            val x = bounds.centerX().toFloat()
+            val y = bounds.centerY() - (textPaint.descent() + textPaint.ascent()) / 2
 
-        val scaledWidth = bounds.width() * currentScale
-        val scaledHeight = bounds.height() * currentScale
+            canvas.withClip(segment.path) {
+                drawText(text, x, y, textPaint)
+            }
+        }
 
-        return textWidth <= scaledWidth * 0.8f && textHeight <= scaledHeight * 0.8f
-    }
-
-    private fun drawLayerNumber(
-        canvas: Canvas,
-        uiState: SegmentUIState,
-    ) {
-        val segment = uiState.segment
-        val bounds = segment.region.bounds
-        val textSize = bounds.width().coerceAtMost(bounds.height()) / 4f
-        textPaint.textSize = textSize
-
-        val text = uiState.layerNumber.toString()
-        val x = bounds.centerX().toFloat()
-        val y = bounds.centerY() - (textPaint.descent() + textPaint.ascent()) / 2
-
-        canvas.withClip(segment.path) {
-            drawText(text, x, y, textPaint)
+        override fun onDetachedFromWindow() {
+            super.onDetachedFromWindow()
+            cachedCanvasBitmap?.recycle()
+            cachedCanvasBitmap = null
+            cachedCanvasBitmapCanvas = null
         }
     }
-
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        cachedCanvasBitmap?.recycle()
-        cachedCanvasBitmap = null
-        cachedCanvasBitmapCanvas = null
-    }
-}

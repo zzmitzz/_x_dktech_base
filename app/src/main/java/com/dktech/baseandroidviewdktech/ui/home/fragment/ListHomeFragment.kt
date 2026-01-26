@@ -14,46 +14,42 @@ import com.dktech.baseandroidviewdktech.ui.home.adapter.ItemAdapter
 import com.dktech.baseandroidviewdktech.utils.Constants
 
 class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
+    var paintID = -1
 
-
-    private val loadingActivityLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            Intent(this@ListHomeFragment.requireActivity(), DrawingActivity::class.java).apply {
-                startActivity(this)
-            }
-        }
-    }
-
-    companion object {
-        fun newInstance(dataOrder: Int): ListHomeFragment {
-            return ListHomeFragment().apply {
-                arguments = Bundle().apply {
-                    putInt("dataOrder", dataOrder)
+    private val loadingActivityLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult(),
+        ) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                Intent(this@ListHomeFragment.requireActivity(), DrawingActivity::class.java).apply {
+                    putExtra(DrawingActivity.PAINTING_ID, paintID)
+                    startActivity(this)
                 }
             }
         }
+
+    companion object {
+        fun newInstance(dataOrder: Int): ListHomeFragment =
+            ListHomeFragment().apply {
+                arguments =
+                    Bundle().apply {
+                        putInt("dataOrder", dataOrder)
+                    }
+            }
     }
 
     private val mAdapter by lazy {
         ItemAdapter(
-            Constants.mockListData
+            Constants.mockListData,
         ) { painting ->
+            paintID = painting.id
             loadingActivityLauncher.launch(
-                Intent(requireActivity(), LoadingActivity::class.java).apply {
-                    Intent(this@ListHomeFragment.requireActivity(), DrawingActivity::class.java).apply{
-                        putExtra(DrawingActivity.PAINTING_ID, painting.id)
-                        startActivity(this)
-                    }
-                }
+                Intent(requireActivity(), LoadingActivity::class.java),
             )
         }
     }
 
-    override fun getViewBinding(): FragmentMainBinding {
-        return FragmentMainBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(): FragmentMainBinding = FragmentMainBinding.inflate(layoutInflater)
 
     override fun initView() {
         binding.rcvPainting.apply {
@@ -67,5 +63,4 @@ class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
 
     override fun initEvent() {
     }
-
 }

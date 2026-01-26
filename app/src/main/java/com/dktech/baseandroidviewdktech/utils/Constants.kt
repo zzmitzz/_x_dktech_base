@@ -5,23 +5,23 @@ import android.net.Uri
 import androidx.annotation.DrawableRes
 import androidx.annotation.RawRes
 import com.dktech.baseandroidviewdktech.R
-
-data class Painting(
-    val id: Int = 1,
-    val imageThumbRemote: String = "https://gs-jj-us-static.oss-accelerate.aliyuncs.com/u_file/1902/products/25/9ac904e4a7.jpg",
-    val fileName: String = "line_3",
-    val fillFileName: String = "line_3.svg",
-    val strokeFileName: String = "line_3_stroke.svg"
-)
+import com.dktech.baseandroidviewdktech.model.Painting
+import com.dktech.baseandroidviewdktech.ui.home.model.PaintingUIWrapper
 
 // Damn thing live as application lifecycle
 object Constants {
-    const val configPreview: String = "PREFS_OPEN_PREVIEW"
-    const val configVibration: String = "PREFS_OPEN_VIBRATION"
+    const val CONFIG_PREVIEW: String = "PREFS_OPEN_PREVIEW"
+    const val CONFIG_VIBRATION: String = "PREFS_OPEN_VIBRATION"
     val mockListData =
         buildList {
             repeat(10) {
-                add(Painting(it))
+                add(
+                    PaintingUIWrapper(
+                        remoteThumb = "https://opengameart.org/sites/default/files/oga-textures/115038/templategrid_orm.png",
+                        cacheThumb = null,
+                        fileName = "demon_1",
+                    ),
+                )
             }
         }
 }

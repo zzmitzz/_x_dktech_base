@@ -31,12 +31,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".ui.detail.LoadingActivity"
+            android:configChanges="uiMode|orientation"
+            android:exported="false"/>
 
         <activity
             android:name=".ui.finish.ResultActivity"
             android:configChanges="uiMode|orientation"
             android:exported="false">
         </activity>
+
+        <activity android:name=".ui.my_collection.MyCollectionActivity"
+            android:configChanges="uiMode|orientation"
+            android:exported="false"/>
 
 
         <activity android:name=".ui.detail.DrawingActivity"

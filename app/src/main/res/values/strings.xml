@@ -36,4 +36,9 @@
     <string name="show_preview_window">Show preview window</string>
     <string name="vibrate_when_long_press">Vibrate when long press</string>
     <string name="btn_save">Save</string>
+    <string name="remove">Remove</string>
+    <string name="use">Use</string>
+    <string name="select_music">Music</string>
+    <string name="allow_the_app_to_access_your_files_and_audiovisual_content_to_select_music_from_your_device">Allow the app to access your files and audiovisual content to select music from your device.</string>
+    <string name="loading_text">Loading...</string>
 </resources>
