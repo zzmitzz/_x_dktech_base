@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
+import android.view.View
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.lifecycle.Lifecycle
@@ -47,14 +49,44 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
         FileHelper(this@DrawingActivity)
     }
 
-    override fun getViewBinding(): ActivityDrawingBinding = ActivityDrawingBinding.inflate(layoutInflater)
+    override fun getViewBinding(): ActivityDrawingBinding =
+        ActivityDrawingBinding.inflate(layoutInflater)
 
     override fun initData() {
+        val paintID = intent.getIntExtra(PAINTING_ID, -1)
+        if(paintID != -1){
+            val paint = Constants.mockListData.find { it.id  == paintID}
+            if(paint != null){
+                preparingData(
+                    strokeSVG = paint.strokeFileName,
+                    fillSVG = paint.fillFileName
+                )
+            }else{
+                Toast.makeText(this, "Couldn't find the painting, please try again later.", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+        }
+    }
+
+    companion object {
+        const val PAINTING_ID = "INTENT_PAINTING_ID"
     }
 
     private val handler = Handler(Looper.getMainLooper())
     val saveBitmapThumbnailRunnable =
-        Runnable { viewModel.onScreenLeaving(cacheDir) }
+        Runnable {
+            viewModel.onScreenLeaving(cacheDir) {
+                runOnUiThread {
+                    if (viewModel.configUIState.value.showPreview) {
+                        updatePreviewBitmap()
+                    }
+                }
+            }
+        }
+
+    private fun updatePreviewBitmap() {
+        binding.imView.initBitmap("line_paint_2.png")
+    }
 
     private val onDrawColorToSegment: ((Int) -> Unit) = { segmentID ->
         viewModel.colorSegment(segmentID)
@@ -86,11 +118,21 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
     override fun initView() {
         setupColorPicker(binding.drawview)
         binding.drawview.setCallbackOnColor(onDrawColorToSegment)
+        binding.drawview.onViewportChangeCallback = { state ->
+            viewModel.updateScaleToShowPreview(
+                state.scale > state.originalScale
+            )
+            binding.imView.updateViewport(state)
+        }
         viewModel.initConfiguration()
-        preparingData()
-        viewModel.setPreview(getBooleanPrefs(Constants.configPreview, false))
-        viewModel.setVibrate(getBooleanPrefs(Constants.configVibration, false))
+        viewModel.saveSetting(
+            getBooleanPrefs(Constants.configPreview, false),
+            getBooleanPrefs(Constants.configVibration, false)
+        )
+        handler.postDelayed(saveBitmapThumbnailRunnable, 500L)
+
     }
+
 
     private fun setupColorPicker(drawView: DrawView) {
         colorPickerAdapter =
@@ -106,7 +148,7 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
 
     override fun initEvent() {
         binding.icBack.setSafeOnClickListener {
-            viewModel.onScreenLeaving(cacheDir)
+            viewModel.onScreenLeaving(cacheDir) {}
             onBackPressedCallback.handleOnBackPressed()
         }
         binding.icSetting.setSafeOnClickListener {
@@ -119,6 +161,7 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
                 onSave = {
                     setBooleanPrefs(Constants.configPreview, it.first)
                     setBooleanPrefs(Constants.configVibration, it.second)
+                    viewModel.saveSetting(it.first, it.second)
                 },
             ).show(
                 supportFragmentManager,
@@ -168,12 +211,16 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
                         binding.drawview.setSelectedColor(it.currentSelectedColor.color)
                         colorPickerAdapter.updateSelectedPos(it.currentSelectedColor)
                     }
+                    binding.previewView.visibility =
+                        if (it.showPreview && it.shouldShowPreviewDueScaling) View.VISIBLE else View.GONE
+
                 }
             }
         }
     }
 
     private fun preparingData(
+        fileName: String = "line_paint_2",
         strokeSVG: String = "line_paint_2_stroke.svg",
         fillSVG: String = "line_paint_2.svg",
     ) {

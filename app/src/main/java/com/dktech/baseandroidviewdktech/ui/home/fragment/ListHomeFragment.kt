@@ -1,19 +1,33 @@
 package com.dktech.baseandroidviewdktech.ui.home.fragment
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.recyclerview.widget.GridLayoutManager
 import com.dktech.baseandroidviewdktech.base.BaseFragment
 import com.dktech.baseandroidviewdktech.databinding.FragmentMainBinding
 import com.dktech.baseandroidviewdktech.ui.detail.DrawingActivity
+import com.dktech.baseandroidviewdktech.ui.detail.LoadingActivity
 import com.dktech.baseandroidviewdktech.ui.home.adapter.ItemAdapter
 import com.dktech.baseandroidviewdktech.utils.Constants
 
 class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
 
 
+    private val loadingActivityLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            Intent(this@ListHomeFragment.requireActivity(), DrawingActivity::class.java).apply {
+                startActivity(this)
+            }
+        }
+    }
+
     companion object {
-        fun newInstance(dataOrder: Int): ListHomeFragment{
+        fun newInstance(dataOrder: Int): ListHomeFragment {
             return ListHomeFragment().apply {
                 arguments = Bundle().apply {
                     putInt("dataOrder", dataOrder)
@@ -25,10 +39,15 @@ class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
     private val mAdapter by lazy {
         ItemAdapter(
             Constants.mockListData
-        ){
-            Intent(this@ListHomeFragment.requireActivity(), DrawingActivity::class.java).apply{
-                startActivity(this)
-            }
+        ) { painting ->
+            loadingActivityLauncher.launch(
+                Intent(requireActivity(), LoadingActivity::class.java).apply {
+                    Intent(this@ListHomeFragment.requireActivity(), DrawingActivity::class.java).apply{
+                        putExtra(DrawingActivity.PAINTING_ID, painting.id)
+                        startActivity(this)
+                    }
+                }
+            )
         }
     }
 
@@ -39,7 +58,7 @@ class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
     override fun initView() {
         binding.rcvPainting.apply {
             adapter = mAdapter
-            layoutManager = GridLayoutManager(binding.root.context,2)
+            layoutManager = GridLayoutManager(binding.root.context, 2)
         }
     }
 

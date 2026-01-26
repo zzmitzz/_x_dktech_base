@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Picture
 import com.caverock.androidsvg.SVG
+import java.io.File
 import java.io.IOException
 
 class FileHelper(
@@ -17,6 +18,11 @@ class FileHelper(
         return svg.renderToPicture()
     }
 
+//    fun parseCacheFileToPicture(fileName: String): Picture{
+//        val inputStream = File(context.cacheDir, fileName)
+//
+//    }
+
     fun parseAssetPNGFile(fileName: String): Bitmap? =
         try {
             context.assets.open(fileName).use { inputStream ->
@@ -26,4 +32,7 @@ class FileHelper(
             e.printStackTrace()
             null
         }
+
+
+
 }

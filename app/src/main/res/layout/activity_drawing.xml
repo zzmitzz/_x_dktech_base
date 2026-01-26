@@ -109,12 +109,11 @@
         app:layout_constraintStart_toStartOf="@+id/linearLayout2"
         app:cardBackgroundColor="@color/white"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout2" >
-        <ImageView
+        <com.dktech.baseandroidviewdktech.core.custom_view.PreviewView
             android:id="@+id/imView"
             android:layout_width="match_parent"
             android:padding="4dp"
-            android:layout_height="match_parent"
-            android:src="@drawable/line_paint_1"/>
+            android:layout_height="match_parent"/>
     </com.google.android.material.card.MaterialCardView>
 
 

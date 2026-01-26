@@ -36,16 +36,18 @@ class ItemAdapter(
         holder: RecyclerView.ViewHolder,
         position: Int,
     ) {
-        if (listItem[position].imageLocal == null) {
+        if (listItem[position].fileName == null) {
             (holder as ItemViewHolder).onBind()
         } else {
+            (holder as ItemViewHolder).onBind()
+
         }
     }
 
     override fun getItemCount(): Int = listItem.size
 
     override fun getItemViewType(position: Int): Int {
-        if (listItem[position].imageLocal == null) {
+        if (listItem[position].fileName == null) {
             return 1 // This item hasn't beed downloaded
         } else {
             return 2 // Downloaded.

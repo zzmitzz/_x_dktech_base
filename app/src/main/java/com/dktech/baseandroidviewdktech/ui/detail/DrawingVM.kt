@@ -28,6 +28,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.io.File
@@ -43,6 +44,7 @@ data class DrawingUIState(
 
 data class ConfigUIState(
     val showPreview: Boolean = false,
+    val shouldShowPreviewDueScaling: Boolean = false,
     val vibratePress: Boolean = false,
     val currentSelectedColor: ColorItem? = null,
 )
@@ -63,17 +65,17 @@ class DrawingVM : ViewModel() {
 
     private lateinit var segmentLoadState: SegmentLoadState
 
-    fun setPreview(a: Boolean) {
+    fun updateScaleToShowPreview(value: Boolean){
         _configUIState.value =
             _configUIState.value.copy(
-                showPreview = a,
+                shouldShowPreviewDueScaling = value
             )
     }
 
-    fun setVibrate(a: Boolean) {
+    fun saveSetting(preview: Boolean, vibrate: Boolean){
         _configUIState.value =
             _configUIState.value.copy(
-                vibratePress = a,
+                showPreview = preview, vibratePress = vibrate
             )
     }
 
@@ -138,7 +140,7 @@ class DrawingVM : ViewModel() {
                 )
         }
 
-        svgFileName = fileName
+        svgFileName = "$fileName.svg"
         svgStrokeFileName = strokePicture
 
         viewModelScope.launch {
@@ -220,74 +222,78 @@ class DrawingVM : ViewModel() {
     // Have to ensure the job is finished even if the viewmodel is cleared. -_-
     private var unLifeScopedCoroutine = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
-    fun onScreenLeaving(cacheDir: File) {
+    fun onScreenLeaving(cacheDir: File, onSuccess: () -> Unit) {
         unLifeScopedCoroutine.launch {
             saveCacheThumbnail(File(cacheDir, svgFileName.replace("svg", "png")))
+            withContext(Dispatchers.Main.immediate){
+                onSuccess()
+            }
         }
     }
 
     private suspend fun saveCacheThumbnail(fileOutputDir: File) {
         withTimeout(10000L) {
-            val start = System.currentTimeMillis()
-            val thumbnailSize = 512
-            val segments = _drawingUIState.value.segmentUIState
-            val svgWidth = _drawingUIState.value.svgWidth
-            val svgHeight = _drawingUIState.value.svgHeight
+            runInterruptible {
+                val thumbnailSize = 512
+                val segments = _drawingUIState.value.segmentUIState
+                val svgWidth = _drawingUIState.value.svgWidth
+                val svgHeight = _drawingUIState.value.svgHeight
 
-            if (segments.isEmpty() || svgWidth <= 0 || svgHeight <= 0) return@withTimeout
+                if (segments.isEmpty() || svgWidth <= 0 || svgHeight <= 0) return@runInterruptible
 
-            val bitmap = createBitmap(thumbnailSize, thumbnailSize)
-            val canvas = Canvas(bitmap)
+                val bitmap = createBitmap(thumbnailSize, thumbnailSize)
+                val canvas = Canvas(bitmap)
 
-            val scaleX = thumbnailSize / svgWidth
-            val scaleY = thumbnailSize / svgHeight
-            val scale = minOf(scaleX, scaleY)
+                val scaleX = thumbnailSize / svgWidth
+                val scaleY = thumbnailSize / svgHeight
+                val scale = minOf(scaleX, scaleY)
 
-            val scaledWidth = svgWidth * scale
-            val scaledHeight = svgHeight * scale
-            val offsetX = (thumbnailSize - scaledWidth) / 2f
-            val offsetY = (thumbnailSize - scaledHeight) / 2f
+                val scaledWidth = svgWidth * scale
+                val scaledHeight = svgHeight * scale
+                val offsetX = (thumbnailSize - scaledWidth) / 2f
+                val offsetY = (thumbnailSize - scaledHeight) / 2f
 
-            val drawMatrix =
-                Matrix().apply {
-                    postScale(scale, scale)
-                    postTranslate(offsetX, offsetY)
-                }
+                val drawMatrix =
+                    Matrix().apply {
+                        postScale(scale, scale)
+                        postTranslate(offsetX, offsetY)
+                    }
 
-            val fillPaint =
-                Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    style = Paint.Style.FILL
-                }
+                val fillPaint =
+                    Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        style = Paint.Style.FILL
+                    }
 
-            canvas.drawColor(Color.WHITE)
+                canvas.drawColor(Color.WHITE)
 
-            canvas.withMatrix(drawMatrix) {
-                segments.forEach { uiState ->
-                    fillPaint.color = if (!uiState.isColored) Color.WHITE else uiState.targetColor
-                    drawPath(uiState.segment.path, fillPaint)
-                }
+                canvas.withMatrix(drawMatrix) {
+                    segments.forEach { uiState ->
+                        fillPaint.color = if (!uiState.isColored) Color.WHITE else uiState.targetColor
+                        drawPath(uiState.segment.path, fillPaint)
+                    }
 
-                svgStrokeFileName?.let {
-                    val strokeMatrix =
-                        Matrix().apply {
-                            val strokeScaleX = svgWidth / it.width
-                            val strokeScaleY = svgHeight / it.height
-                            postScale(strokeScaleX, strokeScaleY)
+                    svgStrokeFileName?.let {
+                        val strokeMatrix =
+                            Matrix().apply {
+                                val strokeScaleX = svgWidth / it.width
+                                val strokeScaleY = svgHeight / it.height
+                                postScale(strokeScaleX, strokeScaleY)
+                            }
+                        withMatrix(strokeMatrix) {
+                            drawPicture(it)
                         }
-                    withMatrix(strokeMatrix) {
-                        drawPicture(it)
                     }
                 }
-            }
 
-            try {
-                FileOutputStream(fileOutputDir).use { out ->
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+                try {
+                    FileOutputStream(fileOutputDir).use { out ->
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                } finally {
+                    bitmap.recycle()
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
-                bitmap.recycle()
             }
         }
     }
