@@ -16,7 +16,7 @@ import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
 
 object RetrofitClient {
-    private const val BASE_URL = "https://mocki.io/"
+    private const val BASE_URL = "https://inhouse-api.dktechgroup.com/"
 
     private val gson by lazy {
         GsonBuilder()
@@ -24,30 +24,29 @@ object RetrofitClient {
             .create()
     }
 
-    private fun getUnsafeOkHttpClient(): OkHttpClient {
-        return try {
+    private fun getUnsafeOkHttpClient(): OkHttpClient =
+        try {
             // Create a trust manager that does not validate certificate chains
-            val trustAllCerts = arrayOf<TrustManager>(
-                object : X509TrustManager {
-                    @Throws(CertificateException::class)
-                    override fun checkClientTrusted(
-                        chain: Array<X509Certificate?>?,
-                        authType: String?
-                    ) {
-                    }
+            val trustAllCerts =
+                arrayOf<TrustManager>(
+                    object : X509TrustManager {
+                        @Throws(CertificateException::class)
+                        override fun checkClientTrusted(
+                            chain: Array<X509Certificate?>?,
+                            authType: String?,
+                        ) {
+                        }
 
-                    @Throws(CertificateException::class)
-                    override fun checkServerTrusted(
-                        chain: Array<X509Certificate?>?,
-                        authType: String?
-                    ) {
-                    }
+                        @Throws(CertificateException::class)
+                        override fun checkServerTrusted(
+                            chain: Array<X509Certificate?>?,
+                            authType: String?,
+                        ) {
+                        }
 
-                    override fun getAcceptedIssuers(): Array<X509Certificate?>? {
-                        return arrayOf()
-                    }
-                }
-            )
+                        override fun getAcceptedIssuers(): Array<X509Certificate?>? = arrayOf()
+                    },
+                )
 
             // Install the all-trusting trust manager
             val sslContext = SSLContext.getInstance("SSL")
@@ -66,7 +65,6 @@ object RetrofitClient {
             val trustManager =
                 trustManagers[0] as X509TrustManager
 
-
             val builder = OkHttpClient.Builder()
             builder.sslSocketFactory(sslSocketFactory, trustManager)
             builder.hostnameVerifier { _, _ -> true }
@@ -76,29 +74,31 @@ object RetrofitClient {
         } catch (e: Exception) {
             throw RuntimeException(e)
         }
-    }
 
-    private val retrofit = try {
-        Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create(gson))
-            .client(getUnsafeOkHttpClient())
-            .build()
-    } catch (e: RuntimeException) {
-        Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create(gson))
-            .build()
-    }
+    private val retrofit =
+        try {
+            Retrofit
+                .Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(getUnsafeOkHttpClient())
+                .build()
+        } catch (e: RuntimeException) {
+            Retrofit
+                .Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build()
+        }
 
     private val colorBookService by lazy {
         retrofit.create(PaintingService::class.java)
     }
 
     private var colorBookData: List<PaintingData> = emptyList()
-    
-    suspend fun getColoringBookData() : List<PaintingData>{
-        if(colorBookData.isNotEmpty()){
+
+    suspend fun getColoringBookData(): List<PaintingData> {
+        if (colorBookData.isNotEmpty()) {
             return colorBookData
         }
         val resultAPI = colorBookService.getColorBook()

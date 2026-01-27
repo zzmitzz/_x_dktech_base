@@ -123,16 +123,26 @@ class SelectMusicBottomSheet(
         localMusicList.clear()
 
         val rawMusicFiles =
-            listOf(
-                R.raw.awesome_christmas to "Awesome Christmas",
+            listOf<Triple<Int, String, Int>>(
+                Triple(R.raw.m1, "Days of Serenity", R.drawable.music_0),
+                Triple(R.raw.m2, "Dream Ship", R.drawable.music_1),
+                Triple(R.raw.m3, "Dreamy", R.drawable.music_2),
+                Triple(R.raw.m4, "Forest Memories", R.drawable.music_3),
+                Triple(R.raw.m5, "Morning Coffee", R.drawable.music_4),
+                Triple(R.raw.m6, "Meadow", R.drawable.music_5),
+                Triple(R.raw.m7, "Quiet", R.drawable.music_6),
+                Triple(R.raw.m8, "Rainy", R.drawable.music_7),
+                Triple(R.raw.m9, "Study", R.drawable.music_8),
+                Triple(R.raw.m10, "Roadtrip", R.drawable.music_9),
             )
 
-        rawMusicFiles.forEach { (resourceId, name) ->
+        rawMusicFiles.forEach { (resourceId, name, thumbnail) ->
             localMusicList.add(
                 MusicItem(
                     name = name,
-                    artistName = "Local Music",
+                    artistName = "None",
                     resourceId = resourceId,
+                    thumbnail = thumbnail,
                 ),
             )
         }

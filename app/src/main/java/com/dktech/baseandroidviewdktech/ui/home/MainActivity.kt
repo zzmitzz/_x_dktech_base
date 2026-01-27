@@ -18,6 +18,7 @@ import com.dktech.baseandroidviewdktech.databinding.ActivityMainBinding
 import com.dktech.baseandroidviewdktech.ui.home.MainViewModel
 import com.dktech.baseandroidviewdktech.ui.home.adapter.VPAdapter
 import com.dktech.baseandroidviewdktech.ui.my_collection.MyCollectionActivity
+import com.dktech.baseandroidviewdktech.ui.setting.SettingActivity
 import com.dktech.baseandroidviewdktech.utils.helper.setSafeOnClickListener
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
@@ -30,6 +31,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                     finish()
                 }
             }
+
+    private val viewModel by lazy {
+        ViewModelProvider(this)[MainViewModel::class.java]
+    }
 
     private val vpAdapter by lazy {
         VPAdapter(
@@ -117,6 +122,16 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 startActivity(this)
             }
         }
+        binding.icSetting.setSafeOnClickListener {
+            Intent(this@MainActivity, SettingActivity::class.java).apply {
+                startActivity(this)
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.loadColorBookData(this)
     }
 
     override fun initObserver() {

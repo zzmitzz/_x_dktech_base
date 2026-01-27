@@ -24,35 +24,42 @@ class MainViewModel : ViewModel() {
 
     var loadingState = MutableStateFlow<Boolean>(false)
 
-
-    fun loadColorBookData(
-        mContext: Context
-    ) {
+    fun loadColorBookData(mContext: Context) {
         val localData = AppDatabase.getDatabase(mContext).colorSegmentDAO()
 
         viewModelScope.launch {
             loadingState.value = true
             val result = RetrofitClient.getColoringBookData()
             val alreadyColoredPainting = localData.getDistinctFileNames().first()
-            val data = result.map {
-                PaintingUIWrapper(
-                    remoteThumb = it.thumbnail ?: "",
-                    cacheThumb = if (alreadyColoredPainting.contains(it.fileName)) checkFileExistCache(
-                        mContext,
-                        cvtFileNameIntoThumbPNG(it.fileName)
-                    )?.toUri() else null,
-                    fileName = it.fileName ?: "",
-                    fillSVG = it.fillFile,
-                    strokeSVG = it.strokeFile
-                )
-            }
+            val data =
+                result.map {
+                    val fileName = it.category + it.fileName
+                    PaintingUIWrapper(
+                        remoteThumb = it.thumbnail ?: "",
+                        cacheThumb =
+                            if (alreadyColoredPainting.contains(fileName)) {
+                                checkFileExistCache(
+                                    mContext,
+                                    cvtFileNameIntoThumbPNG(fileName),
+                                )?.toUri()
+                            } else {
+                                null
+                            },
+                        fileName = fileName,
+                        fillSVG = it.fillFile.first(),
+                        strokeSVG = it.strokeFile,
+                    )
+                }
             _dataColorBook.value = data
             loadingState.value = false
         }
     }
 
-    private suspend fun checkFileExistCache(mContext: Context, fileName: String?): File? {
-        if(fileName == null) return null
+    private suspend fun checkFileExistCache(
+        mContext: Context,
+        fileName: String?,
+    ): File? {
+        if (fileName == null) return null
         return withContext(Dispatchers.IO) {
             try {
                 val file = File(mContext.cacheDir, fileName)

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="16dp"
+        android:background="@drawable/bg_radius_20"
+        android:backgroundTint="@color/white">
+        <ImageView
+            android:id="@+id/ic_close"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="end"
+            android:padding="12dp"
+            android:src="@drawable/ic_close_ads" />
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/repaint_artwork"
+            android:fontFamily="@font/nunito_bold"
+            android:layout_gravity="center"
+            android:textSize="22sp"
+            android:textColor="#002948"/>
+        <TextView
+            android:id="@+id/tvDescription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/nunito_semibold"
+            android:textSize="16sp"
+            android:layout_gravity="center"
+            android:textColor="#002948"
+            android:text="@string/are_you_sure_to_repaint_this_artwork"/>
+
+        <LinearLayout
+            android:id="@+id/btnAction"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_radius_8"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="#0071C7"
+            android:gravity="center"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/tvAction"
+                android:layout_width="wrap_content"
+                android:fontFamily="@font/nunito_bold"
+                android:textColor="@color/white"
+                android:layout_marginVertical="12dp"
+                android:layout_marginHorizontal="4dp"
+                android:textSize="20sp"
+                android:layout_height="wrap_content"
+                android:text="@string/repaint"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+</LinearLayout>

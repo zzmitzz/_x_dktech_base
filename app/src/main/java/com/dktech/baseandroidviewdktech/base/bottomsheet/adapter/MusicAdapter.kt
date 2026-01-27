@@ -59,25 +59,7 @@ class MusicAdapter(
             binding.tvMusic.text = musicItem.name
             binding.tvArtistName.text = musicItem.artistName
 
-            if (isOnlineTab) {
-                val avatarIndex = (position % 11) + 1
-                val avatarResourceName = "avatar_$avatarIndex"
-                val avatarResourceId =
-                    binding.root.context.resources.getIdentifier(
-                        avatarResourceName,
-                        "drawable",
-                        binding.root.context.packageName,
-                    )
-                if (avatarResourceId != 0) {
-                    binding.iconAvatar.setImageDrawable(
-                        ContextCompat.getDrawable(binding.root.context, avatarResourceId),
-                    )
-                } else {
-                    binding.iconAvatar.setImageResource(R.drawable.ic_music_bottomsheet)
-                }
-            } else {
-                binding.iconAvatar.setImageResource(R.drawable.ic_music_bottomsheet)
-            }
+            binding.iconAvatar.setImageResource(musicItem.thumbnail)
 
             // Hiển thị icon play/pause ở cả tab Online và Local
             binding.iconPlayPause.visibility = View.VISIBLE

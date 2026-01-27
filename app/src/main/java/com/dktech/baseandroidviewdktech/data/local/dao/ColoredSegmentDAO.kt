@@ -17,4 +17,7 @@ interface ColoredSegmentDAO {
 
     @Query("SELECT DISTINCT svg_file_name FROM color_segment")
     fun getDistinctFileNames(): Flow<List<String>>
+
+    @Query("DELETE FROM color_segment WHERE svg_file_name=:fileName")
+    suspend fun deleteColoredSegmentsByFileName(fileName: String)
 }

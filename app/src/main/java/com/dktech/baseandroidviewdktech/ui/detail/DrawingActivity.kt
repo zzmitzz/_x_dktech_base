@@ -65,16 +65,15 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
     override fun getViewBinding(): ActivityDrawingBinding = ActivityDrawingBinding.inflate(layoutInflater)
 
     override fun initData() {
-//        val paintID = intent.getStringExtra(PAINTING_FILE_NAME)
-        val paintID = "demon_1"
+        val paintID = intent.getStringExtra(PAINTING_FILE_NAME)
+//        val paintID = "demon_1"
         if (paintID != null) {
-
             preparingData(
                 fileName = paintID,
                 fillSVG = cvtFileNameIntoFillSVG(paintID),
                 strokeSVG = cvtFileNameIntoStrokeSVG(paintID),
             )
-        }else {
+        } else {
             Toast.makeText(this, "Couldn't find the painting, please try again later.", Toast.LENGTH_SHORT).show()
             finish()
         }
@@ -323,8 +322,11 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
         strokeSVG: String,
         fillSVG: String,
     ) {
-        val strokePicture = fileHelper.parseCacheFileToPicture(strokeSVG)
-        viewModel.initSegmentDraw(this@DrawingActivity, fileName, fillSVG, strokePicture)
-        binding.drawview.loadStrokeSvgFromResource(strokePicture)
+        try {
+            val strokePicture = fileHelper.parseCacheFileToPicture(strokeSVG)
+            viewModel.initSegmentDraw(this@DrawingActivity, fileName, fillSVG, strokePicture)
+            binding.drawview.loadStrokeSvgFromResource(strokePicture)
+        } catch (e: Exception) {
+        }
     }
 }

@@ -97,23 +97,17 @@ class DrawView
             }
 
         private val textureBitmap: Bitmap by lazy {
-        BitmapFactory.decodeResource(resources, com.dktech.baseandroidviewdktech.R.drawable.placeholder_texture)
-    }
-
-    private val texturePaint: Paint by lazy {
-        Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.FILL
-            val shader = android.graphics.BitmapShader(
-                textureBitmap,
-                android.graphics.Shader.TileMode.REPEAT,
-                android.graphics.Shader.TileMode.REPEAT
+            BitmapFactory.decodeResource(
+                resources,
+                com.dktech.baseandroidviewdktech.R.drawable.placeholder_texture,
             )
-            val matrix = Matrix()
-            matrix.setScale(0.1f, 0.1f)
-            shader.setLocalMatrix(matrix)
-            this.shader = shader
         }
-    }
+
+        private val gridOverlayCache = mutableMapOf<Int, Bitmap>()
+        
+        private val gridBitmapPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            isFilterBitmap = true
+        }
 
         val textPaint =
             Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -389,6 +383,12 @@ class DrawView
 
         fun invalidateCache() {
             isCacheValid = false
+            clearGridOverlayCache()
+        }
+        
+        private fun clearGridOverlayCache() {
+            gridOverlayCache.values.forEach { it.recycle() }
+            gridOverlayCache.clear()
         }
 
         private fun ensureCacheBitmap() {
@@ -546,9 +546,42 @@ class DrawView
             canvas: Canvas,
             segment: Segments,
         ) {
+            val segmentId = segment.hashCode()
+            val cachedBitmap = gridOverlayCache.getOrPut(segmentId) {
+                createGridOverlayBitmap(segment)
+            }
+            val bounds = segment.region.bounds
+            canvas.drawBitmap(cachedBitmap, bounds.left.toFloat(), bounds.top.toFloat(), gridBitmapPaint)
+        }
+        
+        private fun createGridOverlayBitmap(segment: Segments): Bitmap {
+            val bounds = segment.region.bounds
+            val width = bounds.width().coerceAtLeast(1)
+            val height = bounds.height().coerceAtLeast(1)
+            
+            val bitmap = createBitmap(width, height)
+            val canvas = Canvas(bitmap)
+            
+            canvas.translate(-bounds.left.toFloat(), -bounds.top.toFloat())
+            
+            val texturePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.FILL
+                val shader = android.graphics.BitmapShader(
+                    textureBitmap,
+                    android.graphics.Shader.TileMode.REPEAT,
+                    android.graphics.Shader.TileMode.REPEAT,
+                )
+                val matrix = Matrix()
+                matrix.setScale(0.1f, 0.1f)
+                shader.setLocalMatrix(matrix)
+                this.shader = shader
+            }
+            
             canvas.withClip(segment.path) {
                 drawPaint(texturePaint)
             }
+            
+            return bitmap
         }
 
         private fun shouldShowLayerNumber(uiState: SegmentUIState): Boolean {
@@ -606,5 +639,7 @@ class DrawView
             cachedCanvasBitmap?.recycle()
             cachedCanvasBitmap = null
             cachedCanvasBitmapCanvas = null
+            clearGridOverlayCache()
+            textureBitmap.recycle()
         }
     }

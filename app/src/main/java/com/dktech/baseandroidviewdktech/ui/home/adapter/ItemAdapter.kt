@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.dktech.baseandroidviewdktech.databinding.ItemPaintMainBinding
 import com.dktech.baseandroidviewdktech.ui.home.model.PaintingUIWrapper
 import com.dktech.baseandroidviewdktech.utils.helper.setSafeOnClickListener
@@ -13,8 +14,10 @@ import com.dktech.baseandroidviewdktech.utils.helper.setSafeOnClickListener
 class ItemAdapter(
     private val onClick: (PaintingUIWrapper) -> Unit,
 ) : ListAdapter<PaintingUIWrapper, RecyclerView.ViewHolder>(PaintingDiffCallback()) {
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): RecyclerView.ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
         val binding = ItemPaintMainBinding.inflate(layoutInflater, parent, false)
         return when (viewType) {
@@ -24,7 +27,10 @@ class ItemAdapter(
         }
     }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: RecyclerView.ViewHolder,
+        position: Int,
+    ) {
         val item = getItem(position)
         when (holder) {
             is ItemLocalViewHolder -> holder.bind(item)
@@ -32,9 +38,7 @@ class ItemAdapter(
         }
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return if (getItem(position).cacheThumb == null) VIEW_TYPE_REMOTE else VIEW_TYPE_LOCAL
-    }
+    override fun getItemViewType(position: Int): Int = if (getItem(position).cacheThumb == null) VIEW_TYPE_REMOTE else VIEW_TYPE_LOCAL
 
     inner class ItemLocalViewHolder(
         private val binding: ItemPaintMainBinding,
@@ -43,7 +47,10 @@ class ItemAdapter(
             Glide
                 .with(binding.root)
                 .load(item.cacheThumb)
+                .skipMemoryCache(true)
+                .diskCacheStrategy(DiskCacheStrategy.NONE)
                 .into(binding.imageLine)
+
             binding.root.setSafeOnClickListener {
                 onClick(item)
             }
@@ -71,11 +78,13 @@ class ItemAdapter(
 }
 
 class PaintingDiffCallback : DiffUtil.ItemCallback<PaintingUIWrapper>() {
-    override fun areItemsTheSame(oldItem: PaintingUIWrapper, newItem: PaintingUIWrapper): Boolean {
-        return oldItem.fileName == newItem.fileName
-    }
+    override fun areItemsTheSame(
+        oldItem: PaintingUIWrapper,
+        newItem: PaintingUIWrapper,
+    ): Boolean = oldItem.fileName == newItem.fileName
 
-    override fun areContentsTheSame(oldItem: PaintingUIWrapper, newItem: PaintingUIWrapper): Boolean {
-        return oldItem == newItem
-    }
+    override fun areContentsTheSame(
+        oldItem: PaintingUIWrapper,
+        newItem: PaintingUIWrapper,
+    ): Boolean = oldItem == newItem
 }

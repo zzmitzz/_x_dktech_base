@@ -16,22 +16,11 @@ import com.dktech.baseandroidviewdktech.ui.detail.LoadingActivity
 import com.dktech.baseandroidviewdktech.ui.home.MainViewModel
 import com.dktech.baseandroidviewdktech.ui.home.adapter.ItemAdapter
 import kotlinx.coroutines.launch
+import java.io.File
 
 class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
     private var paintID: String = ""
     private val viewModel by activityViewModels<MainViewModel>()
-
-    private val loadingActivityLauncher =
-        registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult(),
-        ) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                Intent(this@ListHomeFragment.requireActivity(), DrawingActivity::class.java).apply {
-                    putExtra(DrawingActivity.PAINTING_FILE_NAME, paintID)
-                    startActivity(this)
-                }
-            }
-        }
 
     companion object {
         fun newInstance(dataOrder: Int): ListHomeFragment =
@@ -46,13 +35,17 @@ class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
     private val mAdapter by lazy {
         ItemAdapter { painting ->
             paintID = painting.fileName
-            loadingActivityLauncher.launch(
-                Intent(requireActivity(), LoadingActivity::class.java).apply {
-                    putExtra(LoadingActivity.PAINTING_FILE_NAME, painting.fileName)
-                    putExtra(LoadingActivity.FILL_SVG_URL, painting.fillSVG)
-                    putExtra(LoadingActivity.STROKE_SVG_URL, painting.strokeSVG)
-                },
-            )
+            Intent(requireActivity(), LoadingActivity::class.java).apply {
+                putExtra(
+                    LoadingActivity.CACHE_FILE,
+                    painting.cacheThumb,
+                )
+                putExtra(LoadingActivity.REMOTE_URL, painting.remoteThumb)
+                putExtra(LoadingActivity.PAINTING_FILE_NAME, painting.fileName)
+                putExtra(LoadingActivity.FILL_SVG_URL, painting.fillSVG)
+                putExtra(LoadingActivity.STROKE_SVG_URL, painting.strokeSVG)
+                startActivity(this)
+            }
         }
     }
 

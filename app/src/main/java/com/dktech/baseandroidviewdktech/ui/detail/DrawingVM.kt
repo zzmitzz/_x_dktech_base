@@ -104,14 +104,14 @@ class DrawingVM : ViewModel() {
         updateSegmentColored(segmentID)
         // update color state
 
-//        viewModelScope.launch {
-//            segmentLoadState.segmentColoredStateDB.insertColoredSegment(
-//                ColoredSegment(
-//                    fileName = svgFileName,
-//                    segmentId = segmentID,
-//                ),
-//            )
-//        }
+        viewModelScope.launch {
+            segmentLoadState.segmentColoredStateDB.insertColoredSegment(
+                ColoredSegment(
+                    fileName = svgFileName,
+                    segmentId = segmentID,
+                ),
+            )
+        }
     }
 
     // update segment color state
