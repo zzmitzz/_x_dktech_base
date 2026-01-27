@@ -3,18 +3,23 @@ package com.dktech.baseandroidviewdktech.ui.home.fragment
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import com.dktech.baseandroidviewdktech.base.BaseFragment
 import com.dktech.baseandroidviewdktech.databinding.FragmentMainBinding
 import com.dktech.baseandroidviewdktech.ui.detail.DrawingActivity
 import com.dktech.baseandroidviewdktech.ui.detail.LoadingActivity
+import com.dktech.baseandroidviewdktech.ui.home.MainViewModel
 import com.dktech.baseandroidviewdktech.ui.home.adapter.ItemAdapter
-import com.dktech.baseandroidviewdktech.utils.Constants
+import kotlinx.coroutines.launch
 
 class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
-    var paintID: String = ""
+    private var paintID: String = ""
+    private val viewModel by activityViewModels<MainViewModel>()
 
     private val loadingActivityLauncher =
         registerForActivityResult(
@@ -22,7 +27,7 @@ class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
         ) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 Intent(this@ListHomeFragment.requireActivity(), DrawingActivity::class.java).apply {
-                    putExtra(DrawingActivity.PAINTING_ID, paintID)
+                    putExtra(DrawingActivity.PAINTING_FILE_NAME, paintID)
                     startActivity(this)
                 }
             }
@@ -39,12 +44,14 @@ class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
     }
 
     private val mAdapter by lazy {
-        ItemAdapter(
-            Constants.mockListData,
-        ) { painting ->
+        ItemAdapter { painting ->
             paintID = painting.fileName
             loadingActivityLauncher.launch(
-                Intent(requireActivity(), LoadingActivity::class.java),
+                Intent(requireActivity(), LoadingActivity::class.java).apply {
+                    putExtra(LoadingActivity.PAINTING_FILE_NAME, painting.fileName)
+                    putExtra(LoadingActivity.FILL_SVG_URL, painting.fillSVG)
+                    putExtra(LoadingActivity.STROKE_SVG_URL, painting.strokeSVG)
+                },
             )
         }
     }
@@ -59,8 +66,18 @@ class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
     }
 
     override fun initData() {
+        viewModel.loadColorBookData(requireContext())
     }
 
-    override fun initEvent() {
+    override fun initEvent() {}
+
+    override fun observeData() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.dataColorBook.collect { paintings ->
+                    mAdapter.submitList(paintings)
+                }
+            }
+        }
     }
 }

@@ -25,12 +25,15 @@ import com.dktech.baseandroidviewdktech.core.custom_view.DrawView
 import com.dktech.baseandroidviewdktech.core.custom_view.ViewportState
 import com.dktech.baseandroidviewdktech.databinding.ActivityDrawingBinding
 import com.dktech.baseandroidviewdktech.model.ColorItem
+import com.dktech.baseandroidviewdktech.model.Painting
 import com.dktech.baseandroidviewdktech.model.SegmentUIState
 import com.dktech.baseandroidviewdktech.svgparser.SegmentParser
 import com.dktech.baseandroidviewdktech.ui.detail.adapter.ColorPickerAdapter
 import com.dktech.baseandroidviewdktech.ui.finish.ResultActivity
 import com.dktech.baseandroidviewdktech.utils.Constants
 import com.dktech.baseandroidviewdktech.utils.helper.FileHelper
+import com.dktech.baseandroidviewdktech.utils.helper.cvtFileNameIntoFillSVG
+import com.dktech.baseandroidviewdktech.utils.helper.cvtFileNameIntoStrokeSVG
 import com.dktech.baseandroidviewdktech.utils.helper.getBooleanPrefs
 import com.dktech.baseandroidviewdktech.utils.helper.setBooleanPrefs
 import com.dktech.baseandroidviewdktech.utils.helper.setSafeOnClickListener
@@ -62,24 +65,23 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
     override fun getViewBinding(): ActivityDrawingBinding = ActivityDrawingBinding.inflate(layoutInflater)
 
     override fun initData() {
-        val paintID = intent.getStringExtra(PAINTING_ID)
+//        val paintID = intent.getStringExtra(PAINTING_FILE_NAME)
+        val paintID = "demon_1"
         if (paintID != null) {
-            val paint = Constants.mockListData.find { it.fileName == paintID }
-            if (paint != null) {
-                preparingData(
-                    fileName = paint.fileName,
-                    strokeSVG = paint.strokeFileName,
-                    fillSVG = paint.fillFileName,
-                )
-            } else {
-                Toast.makeText(this, "Couldn't find the painting, please try again later.", Toast.LENGTH_SHORT).show()
-                finish()
-            }
+
+            preparingData(
+                fileName = paintID,
+                fillSVG = cvtFileNameIntoFillSVG(paintID),
+                strokeSVG = cvtFileNameIntoStrokeSVG(paintID),
+            )
+        }else {
+            Toast.makeText(this, "Couldn't find the painting, please try again later.", Toast.LENGTH_SHORT).show()
+            finish()
         }
     }
 
     companion object {
-        const val PAINTING_ID = "INTENT_PAINTING_ID"
+        const val PAINTING_FILE_NAME = "INTENT_PAINTING_FILE_NAME"
     }
 
     private val handler = Handler(Looper.getMainLooper())
@@ -321,7 +323,7 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
         strokeSVG: String,
         fillSVG: String,
     ) {
-        val strokePicture = fileHelper.parseAssetFileToPicture(strokeSVG)
+        val strokePicture = fileHelper.parseCacheFileToPicture(strokeSVG)
         viewModel.initSegmentDraw(this@DrawingActivity, fileName, fillSVG, strokePicture)
         binding.drawview.loadStrokeSvgFromResource(strokePicture)
     }

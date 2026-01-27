@@ -14,4 +14,7 @@ interface ColoredSegmentDAO {
 
     @Query("SELECT * FROM color_segment WHERE svg_file_name=:fileName ")
     fun getColoredSegmentByFileName(fileName: String): Flow<List<ColoredSegment>>
+
+    @Query("SELECT DISTINCT svg_file_name FROM color_segment")
+    fun getDistinctFileNames(): Flow<List<String>>
 }

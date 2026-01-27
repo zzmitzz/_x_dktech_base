@@ -18,10 +18,12 @@ class FileHelper(
         return svg.renderToPicture()
     }
 
-//    fun parseCacheFileToPicture(fileName: String): Picture{
-//        val inputStream = File(context.cacheDir, fileName)
-//
-//    }
+    fun parseCacheFileToPicture(fileName: String): Picture {
+        val inputStream = File(context.cacheDir, fileName).inputStream()
+        val svg = SVG.getFromInputStream(inputStream)
+        inputStream.close()
+        return svg.renderToPicture()
+    }
 
     fun parseAssetPNGFile(fileName: String): Bitmap? =
         try {
@@ -32,4 +34,12 @@ class FileHelper(
             e.printStackTrace()
             null
         }
+
+    fun cvtFiletoSvg(fileName: String): String {
+        return "${fileName}_fill.svg"
+    }
+
+    fun cvtFiletoStrokeSVG(fileName: String): String {
+        return "${fileName}_stroke.svg"
+    }
 }

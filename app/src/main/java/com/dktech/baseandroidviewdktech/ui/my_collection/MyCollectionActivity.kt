@@ -20,7 +20,6 @@ class MyCollectionActivity : BaseActivity<ActivityMyCollectionBinding>() {
 
     private val mAdapter by lazy {
         ItemAdapter(
-            emptyList(),
         ) { painting ->
         }
     }

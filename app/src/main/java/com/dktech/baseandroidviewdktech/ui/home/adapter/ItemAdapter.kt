@@ -2,62 +2,48 @@ package com.dktech.baseandroidviewdktech.ui.home.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.dktech.baseandroidviewdktech.base.bottomsheet.adapter.MusicAdapter
 import com.dktech.baseandroidviewdktech.databinding.ItemPaintMainBinding
 import com.dktech.baseandroidviewdktech.ui.home.model.PaintingUIWrapper
 import com.dktech.baseandroidviewdktech.utils.helper.setSafeOnClickListener
 
 class ItemAdapter(
-    val listItem: List<PaintingUIWrapper>,
-    val onClick: (PaintingUIWrapper) -> Unit,
-) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-    override fun onCreateViewHolder(
-        parent: ViewGroup,
-        viewType: Int,
-    ): RecyclerView.ViewHolder {
+    private val onClick: (PaintingUIWrapper) -> Unit,
+) : ListAdapter<PaintingUIWrapper, RecyclerView.ViewHolder>(PaintingDiffCallback()) {
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
+        val binding = ItemPaintMainBinding.inflate(layoutInflater, parent, false)
         return when (viewType) {
-            1 -> {
-                ItemViewHolder(ItemPaintMainBinding.inflate(layoutInflater))
-            }
-
-            2 -> {
-                ItemLocalViewHolder(ItemPaintMainBinding.inflate(layoutInflater))
-            }
-
-            else -> {
-                ItemViewHolder(ItemPaintMainBinding.inflate(layoutInflater))
-            }
+            VIEW_TYPE_REMOTE -> ItemViewHolder(binding)
+            VIEW_TYPE_LOCAL -> ItemLocalViewHolder(binding)
+            else -> ItemViewHolder(binding)
         }
     }
 
-    override fun onBindViewHolder(
-        holder: RecyclerView.ViewHolder,
-        position: Int,
-    ) {
-        if (listItem[position].cacheThumb == null) {
-            (holder as ItemViewHolder).onBind()
-        } else {
-            (holder as ItemLocalViewHolder).onLocalBind()
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val item = getItem(position)
+        when (holder) {
+            is ItemLocalViewHolder -> holder.bind(item)
+            is ItemViewHolder -> holder.bind(item)
         }
     }
 
-    override fun getItemCount(): Int = listItem.size
-
-    override fun getItemViewType(position: Int): Int =
-        if (listItem[position].cacheThumb == null) {
-            1 // This item hasn't beed downloaded
-        } else {
-            2 // Downloaded.
-        }
+    override fun getItemViewType(position: Int): Int {
+        return if (getItem(position).cacheThumb == null) VIEW_TYPE_REMOTE else VIEW_TYPE_LOCAL
+    }
 
     inner class ItemLocalViewHolder(
-        val binding: ItemPaintMainBinding,
+        private val binding: ItemPaintMainBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
-        fun onLocalBind() {
-            val item = listItem[bindingAdapterPosition]
+        fun bind(item: PaintingUIWrapper) {
+            Glide
+                .with(binding.root)
+                .load(item.cacheThumb)
+                .into(binding.imageLine)
             binding.root.setSafeOnClickListener {
                 onClick(item)
             }
@@ -65,17 +51,31 @@ class ItemAdapter(
     }
 
     inner class ItemViewHolder(
-        val binding: ItemPaintMainBinding,
+        private val binding: ItemPaintMainBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
-        fun onBind() {
-            val item = listItem[bindingAdapterPosition]
-            binding.root.setSafeOnClickListener {
-                onClick(item)
-            }
+        fun bind(item: PaintingUIWrapper) {
             Glide
                 .with(binding.root)
                 .load(item.remoteThumb)
                 .into(binding.imageLine)
+            binding.root.setSafeOnClickListener {
+                onClick(item)
+            }
         }
+    }
+
+    companion object {
+        private const val VIEW_TYPE_REMOTE = 1
+        private const val VIEW_TYPE_LOCAL = 2
+    }
+}
+
+class PaintingDiffCallback : DiffUtil.ItemCallback<PaintingUIWrapper>() {
+    override fun areItemsTheSame(oldItem: PaintingUIWrapper, newItem: PaintingUIWrapper): Boolean {
+        return oldItem.fileName == newItem.fileName
+    }
+
+    override fun areContentsTheSame(oldItem: PaintingUIWrapper, newItem: PaintingUIWrapper): Boolean {
+        return oldItem == newItem
     }
 }

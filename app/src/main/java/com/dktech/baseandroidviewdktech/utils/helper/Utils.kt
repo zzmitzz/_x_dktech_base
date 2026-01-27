@@ -24,9 +24,11 @@ import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.first
 import java.io.InputStream
 
-inline fun <reified T> Gson.fromJsonWithTypeToken(value: String): T = this.fromJson(value, object : TypeToken<T>() {}.type)
+inline fun <reified T> Gson.fromJsonWithTypeToken(value: String): T =
+    this.fromJson(value, object : TypeToken<T>() {}.type)
 
-inline fun <reified T> Gson.toJsonWithTypeToken(obj: T): String = this.toJson(obj, object : TypeToken<T>() {}.type)
+inline fun <reified T> Gson.toJsonWithTypeToken(obj: T): String =
+    this.toJson(obj, object : TypeToken<T>() {}.type)
 
 suspend fun getSelectedLanguage(context: Context): LanguageModel =
     PersistentStorage.Companion
@@ -44,7 +46,11 @@ fun setSelectedLanguage(
 ) {
     PersistentStorage.Companion
         .getInstance(context)
-        .saveKey(PersistentStorage.Key.APPLICATION_LANGUAGE, Gson().toJsonWithTypeToken(language), onSuccess)
+        .saveKey(
+            PersistentStorage.Key.APPLICATION_LANGUAGE,
+            Gson().toJsonWithTypeToken(language),
+            onSuccess
+        )
 }
 
 private const val SHARE_PREFERENCES_TAG = "DKTechBase"
@@ -182,4 +188,11 @@ fun Context.vibrate(durationMs: Long = 50L) {
 
 fun cvtFileNameIntoFillSVG(fileName: String): String = "$fileName.svg"
 
-fun cvtFileNameIntoStrokeSVG(fileName: String): String = "${fileName}_stroke.png"
+fun cvtFileNameIntoStrokeSVG(fileName: String): String = "${fileName}_stroke.svg"
+
+fun cvtFileNameIntoThumbPNG(fileName: String?): String? {
+    if (fileName == null) {
+        return null
+    }
+    return "${fileName}.png"
+}

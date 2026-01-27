@@ -18,6 +18,7 @@ import androidx.core.graphics.toColorInt
 import com.dktech.baseandroidviewdktech.svgparser.model.SVGInfo
 import com.dktech.baseandroidviewdktech.svgparser.model.SegmentGroup
 import com.dktech.baseandroidviewdktech.svgparser.model.Segments
+import java.io.File
 
 class SegmentParser {
     suspend fun parseSVGFile(
@@ -26,7 +27,7 @@ class SegmentParser {
     ): SVGInfo {
         var segmentsID: Int = 0
         return runInterruptible(Dispatchers.Default) {
-            val inputStream = mContext.assets.open(assetFileName)
+            val inputStream = File(mContext.cacheDir, assetFileName).inputStream()
             val xml = Xml.newPullParser()
             xml.setInput(inputStream, null)
             val groups = mutableListOf<SegmentGroup>()
