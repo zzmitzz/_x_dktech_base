@@ -67,7 +67,7 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.okhttp)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
-
+    implementation("com.facebook.shimmer:shimmer:0.5.0")
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")

@@ -31,7 +31,7 @@ class MyCollectionVM : ViewModel() {
                             fileName = nameFile,
                             fillSVG = cvtFileNameIntoFillSVG(nameFile),
                             strokeSVG = cvtFileNameIntoStrokeSVG(nameFile),
-                            cacheThumb = File(mContext.cacheDir, cvtFileNameIntoThumbPNG(nameFile)).toUri(),
+                            cacheThumb = File(mContext.cacheDir, cvtFileNameIntoThumbPNG(nameFile)).toUri().toString(),
                             remoteThumb = null,
                         )
                     }

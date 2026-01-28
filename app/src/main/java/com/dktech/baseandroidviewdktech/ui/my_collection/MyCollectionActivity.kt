@@ -17,6 +17,8 @@ import com.dktech.baseandroidviewdktech.ui.detail.LoadingActivity
 import com.dktech.baseandroidviewdktech.ui.home.adapter.ItemAdapter
 import com.dktech.baseandroidviewdktech.ui.home.model.PaintingUIWrapper
 import com.dktech.baseandroidviewdktech.utils.helper.setSafeOnClickListener
+import com.dktech.baseandroidviewdktech.utils.helper.toJsonWithTypeToken
+import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -35,10 +37,8 @@ class MyCollectionActivity : BaseActivity<ActivityMyCollectionBinding>() {
         object : CollectionDialog.OnCallbackAction {
             override fun onNextAction() {
                 Intent(this@MyCollectionActivity, LoadingActivity::class.java).apply {
-                    putExtra(LoadingActivity.CACHE_FILE, paintID.cacheThumb)
-                    putExtra(LoadingActivity.PAINTING_FILE_NAME, paintID.fileName)
-                    putExtra(LoadingActivity.FILL_SVG_URL, paintID.fillSVG)
-                    putExtra(LoadingActivity.STROKE_SVG_URL, paintID.strokeSVG)
+                    val serializedPaint = Gson().toJsonWithTypeToken(paintID)
+                    putExtra(LoadingActivity.PAINTING, serializedPaint)
                     startActivity(this)
                 }
             }
@@ -51,9 +51,8 @@ class MyCollectionActivity : BaseActivity<ActivityMyCollectionBinding>() {
                         viewModel.deleteColoredSegments(paintID.fileName)
                         deleteCachedBitmap(paintID.fileName)
                         Intent(this@MyCollectionActivity, LoadingActivity::class.java).apply {
-                            putExtra(LoadingActivity.PAINTING_FILE_NAME, paintID.fileName)
-                            putExtra(LoadingActivity.FILL_SVG_URL, paintID.fillSVG)
-                            putExtra(LoadingActivity.STROKE_SVG_URL, paintID.strokeSVG)
+                            val serializedPaint = Gson().toJsonWithTypeToken(paintID)
+                            putExtra(LoadingActivity.PAINTING, serializedPaint)
                             startActivity(this)
                         }
                     }
@@ -76,7 +75,7 @@ class MyCollectionActivity : BaseActivity<ActivityMyCollectionBinding>() {
             paintID = painting
             CollectionDialog(
                 false,
-                cacheImage = painting.cacheThumb ?: "".toUri(),
+                cacheImage = painting.cacheThumb?.toUri() ?: "".toUri(),
                 listener,
             ).show(supportFragmentManager, "CollectionDialog")
         }
@@ -105,10 +104,10 @@ class MyCollectionActivity : BaseActivity<ActivityMyCollectionBinding>() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.listData.collect {
-                    if(it.isNotEmpty()){
+                    if (it.isNotEmpty()) {
                         binding.llEmpty.visibility = View.GONE
                         mAdapter.submitList(it)
-                    }else{
+                    } else {
                         binding.llEmpty.visibility = View.VISIBLE
                     }
                 }

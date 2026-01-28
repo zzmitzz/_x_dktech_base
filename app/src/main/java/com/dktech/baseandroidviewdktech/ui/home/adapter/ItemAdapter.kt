@@ -9,71 +9,37 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.dktech.baseandroidviewdktech.databinding.ItemPaintMainBinding
 import com.dktech.baseandroidviewdktech.ui.home.model.PaintingUIWrapper
+import com.dktech.baseandroidviewdktech.utils.helper.CustomLoadingImage
 import com.dktech.baseandroidviewdktech.utils.helper.setSafeOnClickListener
 
 class ItemAdapter(
     private val onClick: (PaintingUIWrapper) -> Unit,
-) : ListAdapter<PaintingUIWrapper, RecyclerView.ViewHolder>(PaintingDiffCallback()) {
+) : ListAdapter<PaintingUIWrapper, ItemAdapter.ItemViewHolder>(PaintingDiffCallback()) {
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int,
-    ): RecyclerView.ViewHolder {
+    ): ItemViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
         val binding = ItemPaintMainBinding.inflate(layoutInflater, parent, false)
-        return when (viewType) {
-            VIEW_TYPE_REMOTE -> ItemViewHolder(binding)
-            VIEW_TYPE_LOCAL -> ItemLocalViewHolder(binding)
-            else -> ItemViewHolder(binding)
-        }
+        return ItemViewHolder(binding)
     }
 
     override fun onBindViewHolder(
-        holder: RecyclerView.ViewHolder,
+        holder: ItemViewHolder,
         position: Int,
     ) {
-        val item = getItem(position)
-        when (holder) {
-            is ItemLocalViewHolder -> holder.bind(item)
-            is ItemViewHolder -> holder.bind(item)
-        }
-    }
-
-    override fun getItemViewType(position: Int): Int = if (getItem(position).cacheThumb == null) VIEW_TYPE_REMOTE else VIEW_TYPE_LOCAL
-
-    inner class ItemLocalViewHolder(
-        private val binding: ItemPaintMainBinding,
-    ) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: PaintingUIWrapper) {
-            Glide
-                .with(binding.root)
-                .load(item.cacheThumb)
-                .skipMemoryCache(true)
-                .diskCacheStrategy(DiskCacheStrategy.NONE)
-                .into(binding.imageLine)
-
-            binding.root.setSafeOnClickListener {
-                onClick(item)
-            }
-        }
+        holder.bind(getItem(position))
     }
 
     inner class ItemViewHolder(
         private val binding: ItemPaintMainBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: PaintingUIWrapper) {
-            Glide
-                .with(binding.root)
-                .load(item.remoteThumb)
-                .into(binding.imageLine)
+            CustomLoadingImage.loadImage(item, binding.imageLine, binding.llShimmer)
             binding.root.setSafeOnClickListener {
                 onClick(item)
             }
         }
-    }
-
-    companion object {
-        private const val VIEW_TYPE_REMOTE = 1
-        private const val VIEW_TYPE_LOCAL = 2
     }
 }
 

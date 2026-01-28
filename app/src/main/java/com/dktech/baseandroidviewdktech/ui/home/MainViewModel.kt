@@ -41,7 +41,7 @@ class MainViewModel : ViewModel() {
                                 checkFileExistCache(
                                     mContext,
                                     cvtFileNameIntoThumbPNG(fileName),
-                                )?.toUri()
+                                )?.toUri().toString()
                             } else {
                                 null
                             },

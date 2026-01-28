@@ -15,11 +15,12 @@ import com.dktech.baseandroidviewdktech.ui.detail.DrawingActivity
 import com.dktech.baseandroidviewdktech.ui.detail.LoadingActivity
 import com.dktech.baseandroidviewdktech.ui.home.MainViewModel
 import com.dktech.baseandroidviewdktech.ui.home.adapter.ItemAdapter
+import com.dktech.baseandroidviewdktech.utils.helper.toJsonWithTypeToken
+import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.io.File
 
 class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
-    private var paintID: String = ""
     private val viewModel by activityViewModels<MainViewModel>()
 
     companion object {
@@ -34,16 +35,9 @@ class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
 
     private val mAdapter by lazy {
         ItemAdapter { painting ->
-            paintID = painting.fileName
             Intent(requireActivity(), LoadingActivity::class.java).apply {
-                putExtra(
-                    LoadingActivity.CACHE_FILE,
-                    painting.cacheThumb,
-                )
-                putExtra(LoadingActivity.REMOTE_URL, painting.remoteThumb)
-                putExtra(LoadingActivity.PAINTING_FILE_NAME, painting.fileName)
-                putExtra(LoadingActivity.FILL_SVG_URL, painting.fillSVG)
-                putExtra(LoadingActivity.STROKE_SVG_URL, painting.strokeSVG)
+                val serializedPaint = Gson().toJsonWithTypeToken(painting)
+                putExtra(LoadingActivity.PAINTING, serializedPaint)
                 startActivity(this)
             }
         }

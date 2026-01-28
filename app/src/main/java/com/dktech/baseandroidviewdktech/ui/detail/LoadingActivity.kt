@@ -2,6 +2,7 @@ package com.dktech.baseandroidviewdktech.ui.detail
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
@@ -11,9 +12,13 @@ import com.bumptech.glide.Glide
 import com.dktech.baseandroidviewdktech.base.BaseActivity
 import com.dktech.baseandroidviewdktech.base.dialog.CollectionDialog
 import com.dktech.baseandroidviewdktech.databinding.ActivityLoadingBinding
+import com.dktech.baseandroidviewdktech.ui.home.model.PaintingUIWrapper
+import com.dktech.baseandroidviewdktech.utils.helper.CustomLoadingImage
 import com.dktech.baseandroidviewdktech.utils.helper.FileHelper
 import com.dktech.baseandroidviewdktech.utils.helper.cvtFileNameIntoFillSVG
 import com.dktech.baseandroidviewdktech.utils.helper.cvtFileNameIntoStrokeSVG
+import com.dktech.baseandroidviewdktech.utils.helper.fromJsonWithTypeToken
+import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -36,30 +41,37 @@ class LoadingActivity : BaseActivity<ActivityLoadingBinding>() {
 
     override fun getViewBinding(): ActivityLoadingBinding = ActivityLoadingBinding.inflate(layoutInflater)
 
-    private var fileName: String? = null
-    private var cacheThumb: String? = null
-    private var remoteThumb: String? = null
+    private var paintingUIWrapper: PaintingUIWrapper? = null
 
     override fun initData() {
-        fileName = intent.getStringExtra(PAINTING_FILE_NAME)
-        val fillSvgUrl = intent.getStringExtra(FILL_SVG_URL)
-        val strokeSvgUrl = intent.getStringExtra(STROKE_SVG_URL)
-        cacheThumb = intent.getStringExtra(CACHE_FILE)
-        remoteThumb = intent.getStringExtra(REMOTE_URL)
-        if (fileName == null) {
-            Toast
-                .makeText(
-                    this@LoadingActivity,
-                    "Can't download resources, please try again later",
-                    Toast.LENGTH_SHORT,
-                ).show()
-            finish()
+        val serializedPaint =
+            intent.getStringExtra(
+                LoadingActivity.PAINTING,
+            )
+        serializedPaint?.let {
+            try {
+                paintingUIWrapper =
+                    Gson().fromJsonWithTypeToken<PaintingUIWrapper>(serializedPaint)
+
+                if (paintingUIWrapper?.cacheThumb == null) {
+                    downloadSvgFiles(paintingUIWrapper?.fileName!!, paintingUIWrapper?.fillSVG!!, paintingUIWrapper?.strokeSVG!!)
+                } else {
+                    finishWithResult()
+                }
+            } catch (e: Exception) {
+                handleErrorDownloading()
+            }
         }
-        if (fileName != null && fillSvgUrl != null && strokeSvgUrl != null) {
-            downloadSvgFiles(fileName!!, fillSvgUrl, strokeSvgUrl)
-        } else {
-            finishWithResult()
-        }
+    }
+
+    private fun handleErrorDownloading() {
+        Toast
+            .makeText(
+                this@LoadingActivity,
+                "Can't download resources, please try again later",
+                Toast.LENGTH_SHORT,
+            ).show()
+        finish()
     }
 
     private fun downloadSvgFiles(
@@ -85,7 +97,7 @@ class LoadingActivity : BaseActivity<ActivityLoadingBinding>() {
                 } catch (e: Exception) {
                     e.printStackTrace()
                     withContext(Dispatchers.Main) {
-                        finishWithResult()
+                        handleErrorDownloading()
                     }
                 }
             }
@@ -114,7 +126,7 @@ class LoadingActivity : BaseActivity<ActivityLoadingBinding>() {
         Handler(Looper.getMainLooper()).postDelayed(
             {
                 Intent(this, DrawingActivity::class.java).apply {
-                    putExtra(DrawingActivity.PAINTING_FILE_NAME, fileName)
+                    putExtra(DrawingActivity.PAINTING_FILE_NAME, paintingUIWrapper?.fileName)
                     startActivity(this)
                 }
                 finish()
@@ -124,18 +136,11 @@ class LoadingActivity : BaseActivity<ActivityLoadingBinding>() {
     }
 
     override fun initView() {
-        if (cacheThumb != null) {
-            Glide
-                .with(this)
-                .load(cacheThumb)
-                .skipMemoryCache(true)
-                .into(binding.imThumb)
-        } else {
-            Glide
-                .with(this)
-                .load(remoteThumb)
-                .into(binding.imThumb)
-        }
+        CustomLoadingImage.loadImage(
+            paintingUIWrapper!!,
+            binding.imThumb,
+            null,
+        )
     }
 
     override fun initEvent() {
@@ -145,10 +150,6 @@ class LoadingActivity : BaseActivity<ActivityLoadingBinding>() {
     }
 
     companion object {
-        const val PAINTING_FILE_NAME = "painting_file_name"
-        const val FILL_SVG_URL = "fill_svg_url"
-        const val STROKE_SVG_URL = "stroke_svg_url"
-        const val CACHE_FILE = "cache_file"
-        const val REMOTE_URL = "remote_url"
+        const val PAINTING = "painting_file_name"
     }
 }

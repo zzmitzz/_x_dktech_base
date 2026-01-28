@@ -104,15 +104,25 @@ class DrawView
         }
 
         private val gridOverlayCache = mutableMapOf<Int, Bitmap>()
-        
-        private val gridBitmapPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            isFilterBitmap = true
-        }
+
+        private val gridBitmapPaint =
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                isFilterBitmap = true
+            }
 
         val textPaint =
             Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 style = Paint.Style.FILL
                 color = Color.BLACK
+                textAlign = Paint.Align.CENTER
+                textSize = 24f
+            }
+
+        val textStrokePaint =
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.STROKE
+                color = Color.WHITE
+                strokeWidth = 1f
                 textAlign = Paint.Align.CENTER
                 textSize = 24f
             }
@@ -385,7 +395,7 @@ class DrawView
             isCacheValid = false
             clearGridOverlayCache()
         }
-        
+
         private fun clearGridOverlayCache() {
             gridOverlayCache.values.forEach { it.recycle() }
             gridOverlayCache.clear()
@@ -528,14 +538,15 @@ class DrawView
                         ) {
                             drawGridOverlay(this, uiState.segment)
                         }
-                        if (shouldShowLayerNumber(uiState)) {
-                            drawLayerNumber(this, uiState)
-                        }
                     }
-
                     strokeSvgPicture?.let { picture ->
                         canvas.withMatrix(strokeMatrix) {
                             drawPicture(picture)
+                        }
+                    }
+                    segmentUIStates.forEach { uiState ->
+                        if (shouldShowLayerNumber(uiState)) {
+                            drawLayerNumber(this, uiState)
                         }
                     }
                 }
@@ -547,40 +558,48 @@ class DrawView
             segment: Segments,
         ) {
             val segmentId = segment.hashCode()
-            val cachedBitmap = gridOverlayCache.getOrPut(segmentId) {
-                createGridOverlayBitmap(segment)
-            }
+            val cachedBitmap =
+                gridOverlayCache.getOrPut(segmentId) {
+                    createGridOverlayBitmap(segment)
+                }
             val bounds = segment.region.bounds
-            canvas.drawBitmap(cachedBitmap, bounds.left.toFloat(), bounds.top.toFloat(), gridBitmapPaint)
+            canvas.drawBitmap(
+                cachedBitmap,
+                bounds.left.toFloat(),
+                bounds.top.toFloat(),
+                gridBitmapPaint,
+            )
         }
-        
+
         private fun createGridOverlayBitmap(segment: Segments): Bitmap {
             val bounds = segment.region.bounds
             val width = bounds.width().coerceAtLeast(1)
             val height = bounds.height().coerceAtLeast(1)
-            
+
             val bitmap = createBitmap(width, height)
             val canvas = Canvas(bitmap)
-            
+
             canvas.translate(-bounds.left.toFloat(), -bounds.top.toFloat())
-            
-            val texturePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                style = Paint.Style.FILL
-                val shader = android.graphics.BitmapShader(
-                    textureBitmap,
-                    android.graphics.Shader.TileMode.REPEAT,
-                    android.graphics.Shader.TileMode.REPEAT,
-                )
-                val matrix = Matrix()
-                matrix.setScale(0.1f, 0.1f)
-                shader.setLocalMatrix(matrix)
-                this.shader = shader
-            }
-            
+
+            val texturePaint =
+                Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    style = Paint.Style.FILL
+                    val shader =
+                        android.graphics.BitmapShader(
+                            textureBitmap,
+                            android.graphics.Shader.TileMode.REPEAT,
+                            android.graphics.Shader.TileMode.REPEAT,
+                        )
+                    val matrix = Matrix()
+                    matrix.setScale(0.1f, 0.1f)
+                    shader.setLocalMatrix(matrix)
+                    this.shader = shader
+                }
+
             canvas.withClip(segment.path) {
                 drawPaint(texturePaint)
             }
-            
+
             return bitmap
         }
 
@@ -624,22 +643,62 @@ class DrawView
             val bounds = segment.region.bounds
             val textSize = bounds.width().coerceAtMost(bounds.height()) / 4f
             textPaint.textSize = textSize
+            textStrokePaint.textSize = textSize
 
             val text = uiState.layerNumber.toString()
             val x = bounds.centerX().toFloat()
             val y = bounds.centerY() - (textPaint.descent() + textPaint.ascent()) / 2
 
             canvas.withClip(segment.path) {
+                drawText(text, x, y, textStrokePaint)
                 drawText(text, x, y, textPaint)
             }
         }
 
-        override fun onDetachedFromWindow() {
-            super.onDetachedFromWindow()
-            cachedCanvasBitmap?.recycle()
-            cachedCanvasBitmap = null
-            cachedCanvasBitmapCanvas = null
-            clearGridOverlayCache()
-            textureBitmap.recycle()
-        }
+        fun showHint() {
+        val firstUncoloredSegment = segmentUIStates.firstOrNull { !it.isColored } ?: return
+        
+        selectedColor = firstUncoloredSegment.targetColor
+        selectedOriginalColor = firstUncoloredSegment.segment.originalColor
+        updateSelectedLayerNumber()
+        
+        val bounds = firstUncoloredSegment.segment.region.bounds
+        if (bounds.isEmpty || width <= 0 || height <= 0) return
+        
+        val segmentCenterX = bounds.exactCenterX()
+        val segmentCenterY = bounds.exactCenterY()
+        val segmentWidth = bounds.width().toFloat()
+        val segmentHeight = bounds.height().toFloat()
+        
+        val scaleX = (width * 0.6f) / segmentWidth
+        val scaleY = (height * 0.6f) / segmentHeight
+        val targetScale = minOf(scaleX, scaleY).coerceIn(minScaleFactor, 30f)
+        
+        val viewCenterX = width / 2f
+        val viewCenterY = height / 2f
+        
+        viewMatrix.reset()
+        viewMatrix.postScale(targetScale, targetScale)
+        
+        val scaledSegmentX = segmentCenterX * targetScale
+        val scaledSegmentY = segmentCenterY * targetScale
+        
+        val translateX = viewCenterX - scaledSegmentX
+        val translateY = viewCenterY - scaledSegmentY
+        
+        viewMatrix.postTranslate(translateX, translateY)
+        
+        constrainViewMatrix()
+        notifyViewportChange()
+        invalidate()
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        cachedCanvasBitmap?.recycle()
+        cachedCanvasBitmap = null
+        cachedCanvasBitmapCanvas = null
+        clearGridOverlayCache()
+        textureBitmap.recycle()
+    }
     }
