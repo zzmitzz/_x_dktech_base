@@ -1,10 +1,8 @@
 package com.dktech.baseandroidviewdktech.ui.my_collection
 
-import android.app.Activity
 import android.content.Intent
-import android.net.Uri
+import android.view.View
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
@@ -15,11 +13,9 @@ import com.dktech.baseandroidviewdktech.base.BaseActivity
 import com.dktech.baseandroidviewdktech.base.bottomsheet.ConfirmDialog
 import com.dktech.baseandroidviewdktech.base.dialog.CollectionDialog
 import com.dktech.baseandroidviewdktech.databinding.ActivityMyCollectionBinding
-import com.dktech.baseandroidviewdktech.ui.detail.DrawingActivity
 import com.dktech.baseandroidviewdktech.ui.detail.LoadingActivity
 import com.dktech.baseandroidviewdktech.ui.home.adapter.ItemAdapter
 import com.dktech.baseandroidviewdktech.ui.home.model.PaintingUIWrapper
-import com.dktech.baseandroidviewdktech.utils.Constants
 import com.dktech.baseandroidviewdktech.utils.helper.setSafeOnClickListener
 import kotlinx.coroutines.launch
 import java.io.File
@@ -109,7 +105,12 @@ class MyCollectionActivity : BaseActivity<ActivityMyCollectionBinding>() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.listData.collect {
-                    mAdapter.submitList(it)
+                    if(it.isNotEmpty()){
+                        binding.llEmpty.visibility = View.GONE
+                        mAdapter.submitList(it)
+                    }else{
+                        binding.llEmpty.visibility = View.VISIBLE
+                    }
                 }
             }
         }

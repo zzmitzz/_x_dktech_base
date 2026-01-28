@@ -28,9 +28,7 @@ class SettingActivity : BaseActivity<ActivitySettingBinding>() {
     override fun initView() {
         runBlocking {
             val language = getSelectedLanguage(this@SettingActivity)
-            withContext(Dispatchers.Main) {
-                binding.tvLanguage.text = getString(language.name)
-            }
+            binding.tvLanguage.text = getString(language.name)
         }
     }
 
