@@ -149,15 +149,4 @@
             android:layout_height="match_parent"/>
     </com.google.android.material.card.MaterialCardView>
 
-    <TextView
-        android:id="@+id/btnHint"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:text="Hanh ne"
-        android:textColor="@color/black"
-        app:layout_constraintEnd_toEndOf="@+id/previewView"
-        app:layout_constraintStart_toStartOf="@+id/previewView"
-        app:layout_constraintTop_toBottomOf="@+id/previewView" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

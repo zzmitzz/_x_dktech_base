@@ -10,28 +10,21 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import com.dktech.baseandroidviewdktech.base.BaseFragment
+import com.dktech.baseandroidviewdktech.base.dialog.LoadingDialog
 import com.dktech.baseandroidviewdktech.databinding.FragmentMainBinding
 import com.dktech.baseandroidviewdktech.ui.detail.DrawingActivity
 import com.dktech.baseandroidviewdktech.ui.detail.LoadingActivity
 import com.dktech.baseandroidviewdktech.ui.home.MainViewModel
 import com.dktech.baseandroidviewdktech.ui.home.adapter.ItemAdapter
+import com.dktech.baseandroidviewdktech.utils.helper.gone
 import com.dktech.baseandroidviewdktech.utils.helper.toJsonWithTypeToken
+import com.dktech.baseandroidviewdktech.utils.helper.visible
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.io.File
 
 class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
     private val viewModel by activityViewModels<MainViewModel>()
-
-    companion object {
-        fun newInstance(dataOrder: Int): ListHomeFragment =
-            ListHomeFragment().apply {
-                arguments =
-                    Bundle().apply {
-                        putInt("dataOrder", dataOrder)
-                    }
-            }
-    }
 
     private val mAdapter by lazy {
         ItemAdapter { painting ->
@@ -53,7 +46,6 @@ class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
     }
 
     override fun initData() {
-        viewModel.loadColorBookData(requireContext())
     }
 
     override fun initEvent() {}
@@ -63,6 +55,20 @@ class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.dataColorBook.collect { paintings ->
                     mAdapter.submitList(paintings)
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.loadingState.collect {
+                    if(it){
+                        binding.loadingProgress.visible()
+                        binding.rcvPainting.gone()
+                    }else{
+                        binding.loadingProgress.gone()
+                        binding.rcvPainting.visible()
+                    }
                 }
             }
         }

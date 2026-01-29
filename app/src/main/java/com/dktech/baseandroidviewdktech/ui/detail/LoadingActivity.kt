@@ -139,7 +139,6 @@ class LoadingActivity : BaseActivity<ActivityLoadingBinding>() {
         CustomLoadingImage.loadImage(
             paintingUIWrapper!!,
             binding.imThumb,
-            null,
         )
     }
 

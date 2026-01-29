@@ -17,6 +17,7 @@ import com.dktech.baseandroidviewdktech.base.ViewModelFactory
 import com.dktech.baseandroidviewdktech.databinding.ActivityMainBinding
 import com.dktech.baseandroidviewdktech.ui.home.MainViewModel
 import com.dktech.baseandroidviewdktech.ui.home.adapter.VPAdapter
+import com.dktech.baseandroidviewdktech.ui.home.model.PaintingCategory
 import com.dktech.baseandroidviewdktech.ui.my_collection.MyCollectionActivity
 import com.dktech.baseandroidviewdktech.ui.setting.SettingActivity
 import com.dktech.baseandroidviewdktech.utils.helper.setSafeOnClickListener
@@ -54,13 +55,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     override fun initView() {
         binding.vpMain.adapter = vpAdapter
-        val tabTiles =
-            listOf(
-                "All",
-                "Tu Ta",
-                "Tu dd",
-                "Huy tu",
-            )
+        val tabTiles = PaintingCategory.entries.map { it.categoryName }
 
         TabLayoutMediator(binding.tabLayoutVP, binding.vpMain) { tab, position ->
             tab.customView =
@@ -75,6 +70,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         binding.tabLayoutVP.addOnTabSelectedListener(
             object : TabLayout.OnTabSelectedListener {
                 override fun onTabSelected(tab: TabLayout.Tab) {
+                    viewModel.updateCategory(
+                        this@MainActivity,
+                        PaintingCategory.entries[tab.position]
+                    )
                     val tv = tab.customView?.findViewById<TextView>(R.id.tvTab)
                     tv?.apply {
                         setTextColor(getColor(R.color.tab_selected))
@@ -105,6 +104,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         binding.tabLayoutVP.getTabAt(0)?.let { tab ->
             binding.tabLayoutVP.selectTab(tab)
             updateTabSelected(tab)
+            viewModel.loadColorBookData(mContext = this)
         }
     }
 

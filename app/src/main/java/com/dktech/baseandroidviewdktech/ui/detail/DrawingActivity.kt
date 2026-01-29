@@ -215,16 +215,6 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
                 }
             bottomSheet.show(supportFragmentManager, "SelectMusicBottomSheet")
         }
-        binding.btnHint.setSafeOnClickListener {
-            val firstUncoloredSegment = viewModel.drawingUIState.value.segmentUIState.firstOrNull { !it.isColored }
-            firstUncoloredSegment?.let { segment ->
-                val colorItem = colorPickerAdapter.currentList.find { it.color == segment.targetColor }
-                colorItem?.let {
-                    viewModel.setColor(it)
-                }
-                binding.drawview.showHint()
-            }
-        }
     }
 
     private fun playSelectedMusic(musicItem: MusicItem?) {

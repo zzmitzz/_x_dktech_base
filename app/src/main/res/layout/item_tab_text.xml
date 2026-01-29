@@ -17,13 +17,14 @@
         android:gravity="center"
         android:maxLines="1" />
 
-    <View
+    <ImageView
         android:id="@+id/line"
         android:layout_width="match_parent"
-        android:layout_height="2dp"
+        android:layout_height="4dp"
         android:layout_marginTop="2dp"
         android:visibility="gone"
-        android:background="#267AFF"
+        android:src="@drawable/line"
+        android:scaleType="centerCrop"
         android:layout_marginHorizontal="8dp"
         android:layout_gravity="end|top"/>
 </LinearLayout>

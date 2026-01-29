@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.dktech.baseandroidviewdktech.base.BaseViewModel
 import com.dktech.baseandroidviewdktech.data.local.AppDatabase
 import com.dktech.baseandroidviewdktech.data.remote.RetrofitClient
+import com.dktech.baseandroidviewdktech.ui.home.model.PaintingCategory
 import com.dktech.baseandroidviewdktech.ui.home.model.PaintingUIWrapper
 import com.dktech.baseandroidviewdktech.utils.helper.cvtFileNameIntoFillSVG
 import com.dktech.baseandroidviewdktech.utils.helper.cvtFileNameIntoThumbPNG
@@ -16,11 +17,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import java.io.File
+
+
+
 
 class MainViewModel : ViewModel() {
     private val _dataColorBook = MutableStateFlow<List<PaintingUIWrapper>>(emptyList())
     val dataColorBook = _dataColorBook.asStateFlow()
+
+    private var currentSelectCategory: PaintingCategory = PaintingCategory.IDOL
 
     var loadingState = MutableStateFlow<Boolean>(false)
 
@@ -32,7 +39,11 @@ class MainViewModel : ViewModel() {
             val result = RetrofitClient.getColoringBookData()
             val alreadyColoredPainting = localData.getDistinctFileNames().first()
             val data =
-                result.map {
+                result
+                    .filter {
+                        it.category.equals(currentSelectCategory.categoryName, true)
+                    }
+                    .map {
                     val fileName = it.category + it.fileName
                     PaintingUIWrapper(
                         remoteThumb = it.thumbnail ?: "",
@@ -53,6 +64,11 @@ class MainViewModel : ViewModel() {
             _dataColorBook.value = data
             loadingState.value = false
         }
+    }
+
+    fun updateCategory(mContext: Context, cate: PaintingCategory){
+        currentSelectCategory = cate
+        loadColorBookData(mContext)
     }
 
     private suspend fun checkFileExistCache(

@@ -35,7 +35,12 @@ class ItemAdapter(
         private val binding: ItemPaintMainBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: PaintingUIWrapper) {
-            CustomLoadingImage.loadImage(item, binding.imageLine, binding.llShimmer)
+            CustomLoadingImage.loadImage(
+                item,
+                binding.imageLine,
+                binding.llShimmer,
+                binding.underLayer
+            )
             binding.root.setSafeOnClickListener {
                 onClick(item)
             }

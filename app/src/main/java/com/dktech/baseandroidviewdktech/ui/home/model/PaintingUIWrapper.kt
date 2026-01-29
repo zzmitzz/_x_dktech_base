@@ -11,3 +11,5 @@ data class PaintingUIWrapper(
     val fillSVG: String?,
     val strokeSVG: String?,
 )
+
+

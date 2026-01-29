@@ -14,4 +14,16 @@
         app:spanCount="2"
         tools:listitem="@layout/item_paint_main"/>
 
+    <ProgressBar
+        android:id="@+id/loadingProgress"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:indeterminate="true"
+        android:indeterminateTint="#0071C7"
+        android:progressTint="#0071C7"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

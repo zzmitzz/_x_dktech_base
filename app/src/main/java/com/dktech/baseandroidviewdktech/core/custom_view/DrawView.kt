@@ -655,44 +655,6 @@ class DrawView
             }
         }
 
-        fun showHint() {
-        val firstUncoloredSegment = segmentUIStates.firstOrNull { !it.isColored } ?: return
-        
-        selectedColor = firstUncoloredSegment.targetColor
-        selectedOriginalColor = firstUncoloredSegment.segment.originalColor
-        updateSelectedLayerNumber()
-        
-        val bounds = firstUncoloredSegment.segment.region.bounds
-        if (bounds.isEmpty || width <= 0 || height <= 0) return
-        
-        val segmentCenterX = bounds.exactCenterX()
-        val segmentCenterY = bounds.exactCenterY()
-        val segmentWidth = bounds.width().toFloat()
-        val segmentHeight = bounds.height().toFloat()
-        
-        val scaleX = (width * 0.6f) / segmentWidth
-        val scaleY = (height * 0.6f) / segmentHeight
-        val targetScale = minOf(scaleX, scaleY).coerceIn(minScaleFactor, 30f)
-        
-        val viewCenterX = width / 2f
-        val viewCenterY = height / 2f
-        
-        viewMatrix.reset()
-        viewMatrix.postScale(targetScale, targetScale)
-        
-        val scaledSegmentX = segmentCenterX * targetScale
-        val scaledSegmentY = segmentCenterY * targetScale
-        
-        val translateX = viewCenterX - scaledSegmentX
-        val translateY = viewCenterY - scaledSegmentY
-        
-        viewMatrix.postTranslate(translateX, translateY)
-        
-        constrainViewMatrix()
-        notifyViewportChange()
-        invalidate()
-    }
-
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         cachedCanvasBitmap?.recycle()

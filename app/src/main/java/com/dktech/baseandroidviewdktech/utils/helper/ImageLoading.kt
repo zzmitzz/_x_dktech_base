@@ -16,36 +16,49 @@ import com.facebook.shimmer.Shimmer
 import com.facebook.shimmer.ShimmerFrameLayout
 
 object CustomLoadingImage {
+    private const val MAX_RETRY_COUNT = 3
+    
     fun loadImage(
         painting: PaintingUIWrapper,
         view: ImageView,
-        shimmer: ShimmerFrameLayout?,
+        shimmer: ShimmerFrameLayout? = null,
+        underLayer: View? = null,
+        retryCount: Int = 0
     ) {
+        Glide.with(view).clear(view)
+        
         shimmer?.apply {
             this.visibility = View.VISIBLE
             startShimmer()
+            underLayer?.visible()
         }
 
-        val request =
-            when {
-                painting.cacheThumb != null -> {
-                    val file = painting.cacheThumb.toUri().toFile()
-                    if (file.exists()) {
-                        Glide
-                            .with(view)
-                            .load(file)
-                            .signature(ObjectKey(file.lastModified()))
-                    } else {
-                        Glide.with(view).load(painting.remoteThumb)
-                    }
-                }
+        val imageUrl = determineImageSource(painting)
+        
+        if (imageUrl == null) {
+            handleLoadFailure(shimmer, underLayer)
+            return
+        }
 
-                else -> {
+        val request = when {
+            painting.cacheThumb != null -> {
+                val file = painting.cacheThumb.toUri().toFile()
+                if (file.exists()) {
+                    Glide.with(view)
+                        .load(file)
+                        .signature(ObjectKey(file.lastModified()))
+                } else {
                     Glide.with(view).load(painting.remoteThumb)
                 }
             }
+            else -> {
+                Glide.with(view).load(painting.remoteThumb)
+            }
+        }
 
         request
+            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
+            .skipMemoryCache(false)
             .dontAnimate()
             .listener(
                 object : RequestListener<Drawable> {
@@ -55,8 +68,13 @@ object CustomLoadingImage {
                         target: Target<Drawable?>,
                         isFirstResource: Boolean,
                     ): Boolean {
-                        shimmer?.stopShimmer()
-                        shimmer?.setShimmer(null)
+                        if (retryCount < MAX_RETRY_COUNT) {
+                            view.postDelayed({
+                                loadImage(painting, view, shimmer, underLayer, retryCount + 1)
+                            }, calculateRetryDelay(retryCount))
+                        } else {
+                            handleLoadFailure(shimmer, underLayer)
+                        }
                         return false
                     }
 
@@ -68,10 +86,31 @@ object CustomLoadingImage {
                         isFirstResource: Boolean,
                     ): Boolean {
                         shimmer?.stopShimmer()
+                        underLayer?.gone()
                         shimmer?.setShimmer(null)
                         return false
                     }
                 },
             ).into(view)
+    }
+    
+    private fun determineImageSource(painting: PaintingUIWrapper): String? {
+        return when {
+            painting.cacheThumb != null -> {
+                val file = painting.cacheThumb.toUri().toFile()
+                if (file.exists()) painting.cacheThumb else painting.remoteThumb
+            }
+            else -> painting.remoteThumb
+        }
+    }
+    
+    private fun handleLoadFailure(shimmer: ShimmerFrameLayout?, underLayer: View?) {
+        shimmer?.stopShimmer()
+        underLayer?.gone()
+        shimmer?.setShimmer(null)
+    }
+    
+    private fun calculateRetryDelay(retryCount: Int): Long {
+        return (500L * (retryCount + 1))
     }
 }

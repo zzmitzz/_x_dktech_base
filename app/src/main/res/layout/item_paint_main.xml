@@ -26,17 +26,22 @@
             app:shimmer_base_color="#DADADA"
             app:shimmer_highlight_color="#FFFFFF"
             app:shimmer_colored="true"
-            android:background="#EDEDED"
             app:shimmer_base_alpha="1"
             app:shimmer_highlight_alpha="1"
             app:shimmer_duration="900"
             app:shimmer_direction="left_to_right">
 
+            <View
+                android:id="@+id/underLayer"
+                android:layout_width="match_parent"
+                android:visibility="gone"
+                android:layout_height="match_parent"
+                android:background="#EDEDED"/>
+
             <ImageView
                 android:id="@+id/imageLine"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerCrop" />
+                android:layout_height="match_parent"/>
 
         </com.facebook.shimmer.ShimmerFrameLayout>
     </com.google.android.material.card.MaterialCardView>
