@@ -9,25 +9,26 @@ import android.graphics.RectF
 import android.graphics.Region
 import android.util.Xml
 import androidx.core.graphics.PathParser
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runInterruptible
-import org.xmlpull.v1.XmlPullParser
-import java.util.Stack
-import kotlin.math.roundToInt
 import androidx.core.graphics.toColorInt
 import com.dktech.baseandroidviewdktech.svgparser.model.SVGInfo
 import com.dktech.baseandroidviewdktech.svgparser.model.SegmentGroup
 import com.dktech.baseandroidviewdktech.svgparser.model.Segments
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runInterruptible
+import org.xmlpull.v1.XmlPullParser
 import java.io.File
+import java.util.Stack
+import kotlin.math.roundToInt
 
 class SegmentParser {
     suspend fun parseSVGFile(
         mContext: Context,
-        assetFileName: String
+        assetFileName: String,
     ): SVGInfo {
         var segmentsID: Int = 0
         return runInterruptible(Dispatchers.Default) {
-            val inputStream = File(mContext.cacheDir, assetFileName).inputStream()
+//            val inputStream = File(mContext.cacheDir, assetFileName).inputStream()
+            val inputStream = mContext.assets.open(assetFileName)
             val xml = Xml.newPullParser()
             xml.setInput(inputStream, null)
             val groups = mutableListOf<SegmentGroup>()
@@ -132,12 +133,11 @@ class SegmentParser {
                 event = xml.next()
             }
 
-
             return@runInterruptible SVGInfo(
                 viewBoxWidth.roundToInt(),
                 viewBoxHeight.roundToInt(),
                 "",
-                groups
+                groups,
             )
         }
     }
@@ -213,7 +213,7 @@ class SegmentParser {
                 }
             }
 
-        return createSegment( path, fillColor, xml)
+        return createSegment(path, fillColor, xml)
     }
 
     private fun convertEllipse(
@@ -344,7 +344,7 @@ class SegmentParser {
 
     private fun buildRegion(path: Path): Region {
         val bounds = RectF()
-        path.computeBounds(bounds,true)
+        path.computeBounds(bounds, true)
         return Region().apply {
             setPath(
                 path,
@@ -412,6 +412,4 @@ class SegmentParser {
         } catch (e: Exception) {
             Color.WHITE
         }
-
-
 }

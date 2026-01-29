@@ -35,8 +35,7 @@
             <ImageView
                 android:id="@+id/imageLine"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerCrop" />
+                android:layout_height="match_parent" />
 
         </com.facebook.shimmer.ShimmerFrameLayout>
     </com.google.android.material.card.MaterialCardView>

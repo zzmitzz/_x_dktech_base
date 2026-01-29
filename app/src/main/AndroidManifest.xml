@@ -22,10 +22,10 @@
             android:name=".ui.splash_screen.SplashScreenActivity"
             android:configChanges="uiMode|orientation"
             android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
         </activity>
         <activity android:name=".ui.setting.SettingActivity"
             android:configChanges="uiMode|orientation"
@@ -52,7 +52,13 @@
 
 
         <activity android:name=".ui.detail.DrawingActivity"
-            android:configChanges="uiMode"/>
+            android:configChanges="uiMode"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name=".ui.language_screen.LanguageScreenActivity"

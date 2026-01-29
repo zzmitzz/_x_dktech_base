@@ -2,6 +2,7 @@ package com.dktech.baseandroidviewdktech.ui.detail
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.graphics.Picture
 import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
@@ -65,18 +66,19 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
     override fun getViewBinding(): ActivityDrawingBinding = ActivityDrawingBinding.inflate(layoutInflater)
 
     override fun initData() {
-        val paintID = intent.getStringExtra(PAINTING_FILE_NAME)
-//        val paintID = "demon_1"
-        if (paintID != null) {
-            preparingData(
-                fileName = paintID,
-                fillSVG = cvtFileNameIntoFillSVG(paintID),
-                strokeSVG = cvtFileNameIntoStrokeSVG(paintID),
-            )
-        } else {
-            Toast.makeText(this, "Couldn't find the painting, please try again later.", Toast.LENGTH_SHORT).show()
-            finish()
-        }
+        preparingData()
+
+//        val paintID = intent.getStringExtra(PAINTING_FILE_NAME)
+//        if (paintID != null) {
+//            preparingData(
+//                fileName = paintID,
+//                fillSVG = cvtFileNameIntoFillSVG(paintID),
+//                strokeSVG = cvtFileNameIntoStrokeSVG(paintID),
+//            )
+//        } else {
+//            Toast.makeText(this, "Couldn't find the painting, please try again later.", Toast.LENGTH_SHORT).show()
+//            finish()
+//        }
     }
 
     companion object {
@@ -216,7 +218,9 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
             bottomSheet.show(supportFragmentManager, "SelectMusicBottomSheet")
         }
         binding.btnHint.setSafeOnClickListener {
-            val firstUncoloredSegment = viewModel.drawingUIState.value.segmentUIState.firstOrNull { !it.isColored }
+            val firstUncoloredSegment =
+                viewModel.drawingUIState.value.segmentUIState
+                    .firstOrNull { !it.isColored }
             firstUncoloredSegment?.let { segment ->
                 val colorItem = colorPickerAdapter.currentList.find { it.color == segment.targetColor }
                 colorItem?.let {
@@ -224,6 +228,13 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
                 }
                 binding.drawview.showHint()
             }
+        }
+
+        binding.btnNext.setOnClickListener {
+            binding.drawview.showNextHint()
+        }
+        binding.btnPrev.setOnClickListener {
+            binding.drawview.showPrevHint()
         }
     }
 
@@ -336,6 +347,15 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
             val strokePicture = fileHelper.parseCacheFileToPicture(strokeSVG)
             viewModel.initSegmentDraw(this@DrawingActivity, fileName, fillSVG, strokePicture)
             binding.drawview.loadStrokeSvgFromResource(strokePicture)
+        } catch (e: Exception) {
+        }
+    }
+
+    private fun preparingData() {
+        try {
+            val strokePicture = Picture()
+            viewModel.initSegmentDraw(this@DrawingActivity, "asdas", "a9.svg", strokePicture)
+//            binding.drawview.loadStrokeSvgFromResource(strokePicture)
         } catch (e: Exception) {
         }
     }

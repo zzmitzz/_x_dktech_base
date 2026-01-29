@@ -82,6 +82,8 @@ class DrawView
         private val visibleBounds = Rect()
         private var isGestureInProgress = false
         private val textMeasurementCache = mutableMapOf<String, Float>()
+        private var currentHintIndex = -1
+        private var highlightedSegmentId: Int? = null
 
         private var minScaleFactor = 0.5f
         private var isInitialSetupDone = false
@@ -151,7 +153,7 @@ class DrawView
                         viewMatrix.getValues(values)
                         val currentScale = values[Matrix.MSCALE_X]
 
-                        if (currentScale !in minScaleFactor..30f) {
+                        if (currentScale !in minScaleFactor..60f) {
                             viewMatrix.postScale(1f / scaleFactor, 1f / scaleFactor, focusX, focusY)
                         }
 
@@ -179,24 +181,27 @@ class DrawView
                 object : GestureDetector.SimpleOnGestureListener() {
                     override fun onDown(e: MotionEvent): Boolean {
                         setLayerType(LAYER_TYPE_HARDWARE, null)
-                        if (!scaleDetector.isInProgress) {
-                            viewMatrix.invert(inverseMatrix)
-
-                            val pts = floatArrayOf(e.x, e.y)
-                            inverseMatrix.mapPoints(pts)
-
-                            val x = pts[0].toInt()
-                            val y = pts[1].toInt()
-
-                            segmentUIStates.reversed().forEach { uiState ->
-                                if (uiState.segment.region.contains(x, y) && !uiState.isColored) {
-                                    if (selectedOriginalColor != null && uiState.segment.originalColor == selectedOriginalColor) {
-                                        listenerComponent?.onFillColorCallback(uiState.id)
-                                    }
-                                }
-                                return@forEach
-                            }
-                        }
+//                        if (!scaleDetector.isInProgress) {
+//                            viewMatrix.invert(inverseMatrix)
+//
+//                            val pts = floatArrayOf(e.x, e.y)
+//                            inverseMatrix.mapPoints(pts)
+//
+//                            val x = pts[0].toInt()
+//                            val y = pts[1].toInt()
+//
+//                            segmentUIStates.reversed().forEach { uiState ->
+//                                if (uiState.segment.region.contains(x, y) && !uiState.isColored) {
+//                                    if (selectedOriginalColor != null && uiState.segment.originalColor == selectedOriginalColor) {
+//                                        listenerComponent?.onFillColorCallback(uiState.id)
+//                                        if (highlightedSegmentId == uiState.id) {
+//                                            highlightedSegmentId = null
+//                                        }
+//                                    }
+//                                }
+//                                return@forEach
+//                            }
+//                        }
                         return true
                     }
 
@@ -530,25 +535,30 @@ class DrawView
             } else {
                 canvas.withMatrix(viewMatrix) {
                     segmentUIStates.forEach { uiState ->
-                        fillPaint.color = if (!uiState.isColored) Color.WHITE else uiState.targetColor
+                        fillPaint.color =
+                            when {
+                                highlightedSegmentId == uiState.id -> Color.RED
+                                !uiState.isColored -> Color.WHITE
+                                else -> uiState.targetColor
+                            }
                         drawPath(uiState.segment.path, fillPaint)
-                        if (selectedLayerNumber > 0 &&
-                            uiState.layerNumber == selectedLayerNumber &&
-                            !uiState.isColored
-                        ) {
-                            drawGridOverlay(this, uiState.segment)
-                        }
+//                        if (selectedLayerNumber > 0 &&
+//                            uiState.layerNumber == selectedLayerNumber &&
+//                            !uiState.isColored
+//                        ) {
+//                            drawGridOverlay(this, uiState.segment)
+//                        }
                     }
-                    strokeSvgPicture?.let { picture ->
-                        canvas.withMatrix(strokeMatrix) {
-                            drawPicture(picture)
-                        }
-                    }
-                    segmentUIStates.forEach { uiState ->
-                        if (shouldShowLayerNumber(uiState)) {
-                            drawLayerNumber(this, uiState)
-                        }
-                    }
+//                    strokeSvgPicture?.let { picture ->
+//                        canvas.withMatrix(strokeMatrix) {
+//                            drawPicture(picture)
+//                        }
+//                    }
+//                    segmentUIStates.forEach { uiState ->
+//                        if (shouldShowLayerNumber(uiState)) {
+//                            drawLayerNumber(this, uiState)
+//                        }
+//                    }
                 }
             }
         }
@@ -656,49 +666,135 @@ class DrawView
         }
 
         fun showHint() {
-        val firstUncoloredSegment = segmentUIStates.firstOrNull { !it.isColored } ?: return
-        
-        selectedColor = firstUncoloredSegment.targetColor
-        selectedOriginalColor = firstUncoloredSegment.segment.originalColor
-        updateSelectedLayerNumber()
-        
-        val bounds = firstUncoloredSegment.segment.region.bounds
-        if (bounds.isEmpty || width <= 0 || height <= 0) return
-        
-        val segmentCenterX = bounds.exactCenterX()
-        val segmentCenterY = bounds.exactCenterY()
-        val segmentWidth = bounds.width().toFloat()
-        val segmentHeight = bounds.height().toFloat()
-        
-        val scaleX = (width * 0.6f) / segmentWidth
-        val scaleY = (height * 0.6f) / segmentHeight
-        val targetScale = minOf(scaleX, scaleY).coerceIn(minScaleFactor, 30f)
-        
-        val viewCenterX = width / 2f
-        val viewCenterY = height / 2f
-        
-        viewMatrix.reset()
-        viewMatrix.postScale(targetScale, targetScale)
-        
-        val scaledSegmentX = segmentCenterX * targetScale
-        val scaledSegmentY = segmentCenterY * targetScale
-        
-        val translateX = viewCenterX - scaledSegmentX
-        val translateY = viewCenterY - scaledSegmentY
-        
-        viewMatrix.postTranslate(translateX, translateY)
-        
-        constrainViewMatrix()
-        notifyViewportChange()
-        invalidate()
-    }
+            val firstUncoloredSegment = segmentUIStates.firstOrNull { !it.isColored } ?: return
 
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        cachedCanvasBitmap?.recycle()
-        cachedCanvasBitmap = null
-        cachedCanvasBitmapCanvas = null
-        clearGridOverlayCache()
-        textureBitmap.recycle()
-    }
+            selectedColor = firstUncoloredSegment.targetColor
+            selectedOriginalColor = firstUncoloredSegment.segment.originalColor
+            updateSelectedLayerNumber()
+
+            val bounds = firstUncoloredSegment.segment.region.bounds
+            if (bounds.isEmpty || width <= 0 || height <= 0) return
+
+            val segmentCenterX = bounds.exactCenterX()
+            val segmentCenterY = bounds.exactCenterY()
+            val segmentWidth = bounds.width().toFloat()
+            val segmentHeight = bounds.height().toFloat()
+
+            val scaleX = (width * 0.6f) / segmentWidth
+            val scaleY = (height * 0.6f) / segmentHeight
+            val targetScale = minOf(scaleX, scaleY).coerceIn(minScaleFactor, 30f)
+
+            val viewCenterX = width / 2f
+            val viewCenterY = height / 2f
+
+            viewMatrix.reset()
+            viewMatrix.postScale(targetScale, targetScale)
+
+            val scaledSegmentX = segmentCenterX * targetScale
+            val scaledSegmentY = segmentCenterY * targetScale
+
+            val translateX = viewCenterX - scaledSegmentX
+            val translateY = viewCenterY - scaledSegmentY
+
+            viewMatrix.postTranslate(translateX, translateY)
+
+            constrainViewMatrix()
+            notifyViewportChange()
+            invalidate()
+        }
+
+        fun showNextHint() {
+            val uncoloredSegments = segmentUIStates.filter { !it.isColored }
+            if (uncoloredSegments.isEmpty()) return
+
+            currentHintIndex = (currentHintIndex + 1) % uncoloredSegments.size
+            val nextSegment = uncoloredSegments[currentHintIndex]
+
+            highlightedSegmentId = nextSegment.id
+            selectedColor = nextSegment.targetColor
+            selectedOriginalColor = nextSegment.segment.originalColor
+
+            val bounds = RectF()
+            nextSegment.segment.path.computeBounds(bounds, true)
+            if (width <= 0 || height <= 0) return
+
+            val segmentCenterX = bounds.centerX()
+            val segmentCenterY = bounds.centerY()
+            val segmentWidth = bounds.width().toFloat()
+            val segmentHeight = bounds.height().toFloat()
+
+            val scaleX = (width * 0.6f) / segmentWidth
+            val scaleY = (height * 0.6f) / segmentHeight
+            val targetScale = minOf(scaleX, scaleY).coerceIn(minScaleFactor, 40f)
+
+            val viewCenterX = width / 2f
+            val viewCenterY = height / 2f
+
+            viewMatrix.reset()
+            viewMatrix.postScale(targetScale, targetScale)
+
+            val scaledSegmentX = segmentCenterX * targetScale
+            val scaledSegmentY = segmentCenterY * targetScale
+
+            val translateX = viewCenterX - scaledSegmentX
+            val translateY = viewCenterY - scaledSegmentY
+
+            viewMatrix.postTranslate(translateX, translateY)
+
+            constrainViewMatrix()
+            notifyViewportChange()
+            invalidate()
+        }
+
+        fun showPrevHint() {
+            val uncoloredSegments = segmentUIStates.filter { !it.isColored }
+            if (uncoloredSegments.isEmpty()) return
+
+            currentHintIndex = ((currentHintIndex - 1) + uncoloredSegments.size) % uncoloredSegments.size
+            val nextSegment = uncoloredSegments[currentHintIndex]
+
+            highlightedSegmentId = nextSegment.id
+            selectedColor = nextSegment.targetColor
+            selectedOriginalColor = nextSegment.segment.originalColor
+
+            val bounds = RectF()
+            nextSegment.segment.path.computeBounds(bounds, true)
+            if (width <= 0 || height <= 0) return
+
+            val segmentCenterX = bounds.centerX()
+            val segmentCenterY = bounds.centerY()
+            val segmentWidth = bounds.width().toFloat()
+            val segmentHeight = bounds.height().toFloat()
+
+            val scaleX = (width * 0.6f) / segmentWidth
+            val scaleY = (height * 0.6f) / segmentHeight
+            val targetScale = minOf(scaleX, scaleY).coerceIn(minScaleFactor, 40f)
+
+            val viewCenterX = width / 2f
+            val viewCenterY = height / 2f
+
+            viewMatrix.reset()
+            viewMatrix.postScale(targetScale, targetScale)
+
+            val scaledSegmentX = segmentCenterX * targetScale
+            val scaledSegmentY = segmentCenterY * targetScale
+
+            val translateX = viewCenterX - scaledSegmentX
+            val translateY = viewCenterY - scaledSegmentY
+
+            viewMatrix.postTranslate(translateX, translateY)
+
+            constrainViewMatrix()
+            notifyViewportChange()
+            invalidate()
+        }
+
+        override fun onDetachedFromWindow() {
+            super.onDetachedFromWindow()
+            cachedCanvasBitmap?.recycle()
+            cachedCanvasBitmap = null
+            cachedCanvasBitmapCanvas = null
+            clearGridOverlayCache()
+            textureBitmap.recycle()
+        }
     }
