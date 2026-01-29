@@ -1,5 +1,6 @@
 package com.dktech.baseandroidviewdktech.ui.finish
 
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Intent
 import android.graphics.Bitmap
@@ -60,37 +61,47 @@ class ResultActivity : BaseActivity<ActivityResultBinding>() {
     private fun loadImage() {
         val pngFileName = cvtFileNameIntoThumbPNG(fileName) ?: return
         val cacheFile = File(cacheDir, pngFileName)
-        
+
         if (cacheFile.exists()) {
-            Glide.with(this)
+            Glide
+                .with(this)
                 .asBitmap()
                 .load(cacheFile)
-                .into(object : CustomTarget<Bitmap>() {
-                    override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
-                        loadedBitmap = resource
-                        binding.ivResult.setImageBitmap(resource)
-                    }
-                    override fun onLoadCleared(placeholder: Drawable?) {}
-                })
+                .into(
+                    object : CustomTarget<Bitmap>() {
+                        override fun onResourceReady(
+                            resource: Bitmap,
+                            transition: Transition<in Bitmap>?,
+                        ) {
+                            loadedBitmap = resource
+                            binding.ivResult.setImageBitmap(resource)
+                        }
+
+                        override fun onLoadCleared(placeholder: Drawable?) {}
+                    },
+                )
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun loadPaintData() {
         lifecycleScope.launch {
-            val paint = withContext(Dispatchers.IO) {
-                paintDAO.getPaint(fileName).firstOrNull()
-            }
-            
-            val finishedDate = if (paint != null) {
-                paint.finishedDate
-            } else {
-                val currentTime = System.currentTimeMillis()
+            val paint =
                 withContext(Dispatchers.IO) {
-                    paintDAO.insertFinishedPaint(Paint(fileName, currentTime))
+                    paintDAO.getPaint(fileName).firstOrNull()
                 }
-                currentTime
-            }
-            
+
+            val finishedDate =
+                if (paint != null) {
+                    paint.finishedDate
+                } else {
+                    val currentTime = System.currentTimeMillis()
+                    withContext(Dispatchers.IO) {
+                        paintDAO.insertFinishedPaint(Paint(fileName, currentTime))
+                    }
+                    currentTime
+                }
+
             val formattedDate = formatDate(finishedDate)
             binding.tvPaintedOn.text = getString(R.string.painted_on) + " " + formattedDate
         }
@@ -115,25 +126,27 @@ class ResultActivity : BaseActivity<ActivityResultBinding>() {
 
     private fun shareImage() {
         val bitmap = loadedBitmap ?: return
-        
+
         lifecycleScope.launch {
-            val uri = withContext(Dispatchers.IO) {
-                saveBitmapToCache(bitmap)
-            }
-            
-            uri?.let {
-                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "image/png"
-                    putExtra(Intent.EXTRA_STREAM, it)
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            val uri =
+                withContext(Dispatchers.IO) {
+                    saveBitmapToCache(bitmap)
                 }
+
+            uri?.let {
+                val shareIntent =
+                    Intent(Intent.ACTION_SEND).apply {
+                        type = "image/png"
+                        putExtra(Intent.EXTRA_STREAM, it)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
                 startActivity(Intent.createChooser(shareIntent, "Share Image"))
             }
         }
     }
 
-    private fun saveBitmapToCache(bitmap: Bitmap): Uri? {
-        return try {
+    private fun saveBitmapToCache(bitmap: Bitmap): Uri? =
+        try {
             val cachePath = File(cacheDir, "shared_images")
             cachePath.mkdirs()
             val file = File(cachePath, "${fileName}_share.png")
@@ -142,22 +155,22 @@ class ResultActivity : BaseActivity<ActivityResultBinding>() {
             }
             FileProvider.getUriForFile(
                 this,
-                "${packageName}.provider",
-                file
+                "$packageName.provider",
+                file,
             )
         } catch (e: Exception) {
             null
         }
-    }
 
     private fun downloadImage() {
         val bitmap = loadedBitmap ?: return
-        
+
         lifecycleScope.launch {
-            val success = withContext(Dispatchers.IO) {
-                saveImageToGallery(bitmap)
-            }
-            
+            val success =
+                withContext(Dispatchers.IO) {
+                    saveImageToGallery(bitmap)
+                }
+
             if (success) {
                 Toast.makeText(this@ResultActivity, "Image saved to gallery", Toast.LENGTH_SHORT).show()
             } else {
@@ -166,17 +179,18 @@ class ResultActivity : BaseActivity<ActivityResultBinding>() {
         }
     }
 
-    private fun saveImageToGallery(bitmap: Bitmap): Boolean {
-        return try {
+    private fun saveImageToGallery(bitmap: Bitmap): Boolean =
+        try {
             val displayName = "${fileName}_${System.currentTimeMillis()}.png"
-            
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val contentValues = ContentValues().apply {
-                    put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
-                    put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/ColorBook")
-                }
-                
+                val contentValues =
+                    ContentValues().apply {
+                        put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+                        put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
+                        put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/ColorBook")
+                    }
+
                 val uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
                 uri?.let {
                     contentResolver.openOutputStream(it)?.use { stream ->
@@ -200,7 +214,6 @@ class ResultActivity : BaseActivity<ActivityResultBinding>() {
         } catch (e: Exception) {
             false
         }
-    }
 
     private fun navigateToHome() {
         Intent(this, MainActivity::class.java).apply {
