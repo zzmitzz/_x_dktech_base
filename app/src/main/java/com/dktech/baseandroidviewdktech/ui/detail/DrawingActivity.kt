@@ -63,7 +63,8 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
     private var musicPlayer: MediaPlayer? = null
     private var selectedMusic: MusicItem? = null
 
-    override fun getViewBinding(): ActivityDrawingBinding = ActivityDrawingBinding.inflate(layoutInflater)
+    override fun getViewBinding(): ActivityDrawingBinding =
+        ActivityDrawingBinding.inflate(layoutInflater)
 
     override fun initData() {
         preparingData()
@@ -107,7 +108,8 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
                 val segment =
                     viewModel.drawingUIState.value.segmentUIState
                         .find { it.id == segmentID }
-                val colorItem = colorPickerAdapter.currentList.find { it.color == segment?.targetColor }
+                val colorItem =
+                    colorPickerAdapter.currentList.find { it.color == segment?.targetColor }
                 colorItem?.let {
                     if (it.freqShown == 1) {
                         val newList = colorPickerAdapter.currentList.toMutableList()
@@ -139,7 +141,8 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
             }
 
             override fun onLongPressSegment(segment: SegmentUIState) {
-                val colorItem = colorPickerAdapter.currentList.find { item -> item.color == segment.targetColor }
+                val colorItem =
+                    colorPickerAdapter.currentList.find { item -> item.color == segment.targetColor }
                 colorItem?.let {
                     viewModel.setColor(it)
                 }
@@ -177,8 +180,8 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
 
     override fun initEvent() {
         binding.icBack.setSafeOnClickListener {
-            viewModel.onScreenLeaving(cacheDir) {}
-            onBackPressedCallback.handleOnBackPressed()
+            index++
+            preparingData()
         }
         binding.icSetting.setSafeOnClickListener {
             SettingDrawingBTS(
@@ -222,7 +225,8 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
                 viewModel.drawingUIState.value.segmentUIState
                     .firstOrNull { !it.isColored }
             firstUncoloredSegment?.let { segment ->
-                val colorItem = colorPickerAdapter.currentList.find { it.color == segment.targetColor }
+                val colorItem =
+                    colorPickerAdapter.currentList.find { it.color == segment.targetColor }
                 colorItem?.let {
                     viewModel.setColor(it)
                 }
@@ -232,8 +236,12 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
 
         binding.btnNext.setOnClickListener {
             binding.drawview.showNextHint()
+            index++
+            binding.tvSegment.text = "${index}/${data.size}"
         }
         binding.btnPrev.setOnClickListener {
+            binding.tvSegment.text = "${index}/${data.size}"
+            index++
             binding.drawview.showPrevHint()
         }
     }
@@ -351,10 +359,29 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
         }
     }
 
+    var index = 0
+    val data = listOf(
+        "a1.svg",
+        "a2.svg",
+        "a3.svg",
+        "a4.svg",
+        "a5.svg",
+        "a6.svg",
+        "a7.svg",
+        "a8.svg",
+        "a9.svg",
+        "a10.svg",
+    )
+
     private fun preparingData() {
         try {
             val strokePicture = Picture()
-            viewModel.initSegmentDraw(this@DrawingActivity, "asdas", "a9.svg", strokePicture)
+            viewModel.initSegmentDraw(
+                this@DrawingActivity,
+                "asdas",
+                data[index % data.size],
+                strokePicture
+            )
 //            binding.drawview.loadStrokeSvgFromResource(strokePicture)
         } catch (e: Exception) {
         }

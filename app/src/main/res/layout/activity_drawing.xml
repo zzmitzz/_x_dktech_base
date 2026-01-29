@@ -13,6 +13,13 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/colorPicker"/>
 
+    <TextView
+        android:id="@+id/tvSegment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <LinearLayout
         android:id="@+id/linearLayout2"
@@ -59,18 +66,21 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/linearLayout3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:layout_marginHorizontal="16dp"
         android:layout_marginBottom="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/colorPicker">
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/colorPicker"
+        tools:layout_editor_absoluteX="16dp">
 
         <FrameLayout
             android:id="@+id/icSetting"
             android:layout_width="40dp"
-            android:background="@drawable/bg_btn_action"
-            android:layout_height="40dp">
+            android:layout_height="40dp"
+            android:background="@drawable/bg_btn_action">
+
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -81,9 +91,10 @@
         <FrameLayout
             android:id="@+id/icMusic"
             android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_marginHorizontal="12dp"
-            android:background="@drawable/bg_btn_action"
-            android:layout_height="40dp">
+            android:background="@drawable/bg_btn_action">
+
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -100,9 +111,10 @@
         <FrameLayout
             android:id="@+id/icZoom"
             android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_marginHorizontal="12dp"
-            android:background="@drawable/bg_btn_action"
-            android:layout_height="40dp">
+            android:background="@drawable/bg_btn_action">
+
             <ImageView
                 android:id="@+id/icZoomType"
                 android:layout_width="match_parent"
@@ -110,7 +122,6 @@
                 android:padding="10dp"
                 android:src="@drawable/ic_zoomin" />
         </FrameLayout>
-
 
 
     </LinearLayout>
