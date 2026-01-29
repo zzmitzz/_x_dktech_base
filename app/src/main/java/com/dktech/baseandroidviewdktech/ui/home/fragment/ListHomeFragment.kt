@@ -16,6 +16,7 @@ import com.dktech.baseandroidviewdktech.ui.detail.DrawingActivity
 import com.dktech.baseandroidviewdktech.ui.detail.LoadingActivity
 import com.dktech.baseandroidviewdktech.ui.home.MainViewModel
 import com.dktech.baseandroidviewdktech.ui.home.adapter.ItemAdapter
+import com.dktech.baseandroidviewdktech.ui.home.model.PaintingCategory
 import com.dktech.baseandroidviewdktech.utils.helper.gone
 import com.dktech.baseandroidviewdktech.utils.helper.toJsonWithTypeToken
 import com.dktech.baseandroidviewdktech.utils.helper.visible
@@ -36,6 +37,22 @@ class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
         }
     }
 
+    private val category: PaintingCategory by lazy {
+        PaintingCategory.entries[requireArguments().getInt(ARG_ID)]
+    }
+
+    companion object {
+        private const val ARG_ID = "category_index"
+
+        fun newInstance(id: Int): ListHomeFragment =
+            ListHomeFragment().apply {
+                arguments =
+                    Bundle().apply {
+                        putInt(ARG_ID, id)
+                    }
+            }
+    }
+
     override fun getViewBinding(): FragmentMainBinding = FragmentMainBinding.inflate(layoutInflater)
 
     override fun initView() {
@@ -54,7 +71,11 @@ class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.dataColorBook.collect { paintings ->
-                    mAdapter.submitList(paintings)
+                    mAdapter.submitList(
+                        paintings.filter {
+                            it.category == category
+                        },
+                    )
                 }
             }
         }
@@ -62,10 +83,10 @@ class ListHomeFragment : BaseFragment<FragmentMainBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.loadingState.collect {
-                    if(it){
+                    if (it) {
                         binding.loadingProgress.visible()
                         binding.rcvPainting.gone()
-                    }else{
+                    } else {
                         binding.loadingProgress.gone()
                         binding.rcvPainting.visible()
                     }

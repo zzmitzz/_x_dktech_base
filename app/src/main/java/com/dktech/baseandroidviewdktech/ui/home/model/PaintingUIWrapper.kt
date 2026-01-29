@@ -7,9 +7,9 @@ import kotlinx.serialization.Serializable
 data class PaintingUIWrapper(
     val remoteThumb: String?,
     val cacheThumb: String?,
+    val lastModifiedCache: Long? = 0,
+    val category: PaintingCategory? = null,
     val fileName: String,
     val fillSVG: String?,
     val strokeSVG: String?,
 )
-
-

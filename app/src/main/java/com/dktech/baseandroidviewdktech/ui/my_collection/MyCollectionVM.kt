@@ -1,6 +1,7 @@
 package com.dktech.baseandroidviewdktech.ui.my_collection
 
 import android.content.Context
+import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -27,12 +28,14 @@ class MyCollectionVM : ViewModel() {
             coloredSegmentDAO.getDistinctFileNames().collect {
                 val distinctFile =
                     it.distinct().map { nameFile ->
+                        val cacheThumb = File(mContext.cacheDir, cvtFileNameIntoThumbPNG(nameFile)).toUri()
                         PaintingUIWrapper(
                             fileName = nameFile,
                             fillSVG = cvtFileNameIntoFillSVG(nameFile),
                             strokeSVG = cvtFileNameIntoStrokeSVG(nameFile),
-                            cacheThumb = File(mContext.cacheDir, cvtFileNameIntoThumbPNG(nameFile)).toUri().toString(),
+                            cacheThumb = cacheThumb.toString(),
                             remoteThumb = null,
+                            lastModifiedCache = cacheThumb.toFile().lastModified(),
                         )
                     }
                 listData.value = distinctFile

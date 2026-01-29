@@ -70,10 +70,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         binding.tabLayoutVP.addOnTabSelectedListener(
             object : TabLayout.OnTabSelectedListener {
                 override fun onTabSelected(tab: TabLayout.Tab) {
-                    viewModel.updateCategory(
-                        this@MainActivity,
-                        PaintingCategory.entries[tab.position]
-                    )
+//                    viewModel.updateCategory(
+//                        this@MainActivity,
+//                        PaintingCategory.entries[tab.position]
+//                    )
                     val tv = tab.customView?.findViewById<TextView>(R.id.tvTab)
                     tv?.apply {
                         setTextColor(getColor(R.color.tab_selected))

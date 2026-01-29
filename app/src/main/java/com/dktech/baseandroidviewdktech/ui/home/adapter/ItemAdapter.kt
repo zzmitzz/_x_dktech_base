@@ -39,7 +39,7 @@ class ItemAdapter(
                 item,
                 binding.imageLine,
                 binding.llShimmer,
-                binding.underLayer
+                binding.underLayer,
             )
             binding.root.setSafeOnClickListener {
                 onClick(item)
@@ -52,7 +52,7 @@ class PaintingDiffCallback : DiffUtil.ItemCallback<PaintingUIWrapper>() {
     override fun areItemsTheSame(
         oldItem: PaintingUIWrapper,
         newItem: PaintingUIWrapper,
-    ): Boolean = oldItem.fileName == newItem.fileName
+    ): Boolean = oldItem.fileName == newItem.fileName && oldItem.lastModifiedCache == newItem.lastModifiedCache
 
     override fun areContentsTheSame(
         oldItem: PaintingUIWrapper,

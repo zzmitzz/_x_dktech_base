@@ -1,6 +1,7 @@
 package com.dktech.baseandroidviewdktech.ui.home
 
 import android.content.Context
+import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,14 +21,9 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import java.io.File
 
-
-
-
 class MainViewModel : ViewModel() {
     private val _dataColorBook = MutableStateFlow<List<PaintingUIWrapper>>(emptyList())
     val dataColorBook = _dataColorBook.asStateFlow()
-
-    private var currentSelectCategory: PaintingCategory = PaintingCategory.IDOL
 
     var loadingState = MutableStateFlow<Boolean>(false)
 
@@ -39,26 +35,25 @@ class MainViewModel : ViewModel() {
             val result = RetrofitClient.getColoringBookData()
             val alreadyColoredPainting = localData.getDistinctFileNames().first()
             val data =
-                result
-                    .filter {
-                        it.category.equals(currentSelectCategory.categoryName, true)
-                    }
-                    .map {
+                result.map {
                     val fileName = it.category + it.fileName
+                    val cacheThumb =
+                        if (alreadyColoredPainting.contains(fileName)) {
+                            checkFileExistCache(
+                                mContext,
+                                cvtFileNameIntoThumbPNG(fileName),
+                            )?.toUri().toString()
+                        } else {
+                            null
+                        }
                     PaintingUIWrapper(
                         remoteThumb = it.thumbnail ?: "",
-                        cacheThumb =
-                            if (alreadyColoredPainting.contains(fileName)) {
-                                checkFileExistCache(
-                                    mContext,
-                                    cvtFileNameIntoThumbPNG(fileName),
-                                )?.toUri().toString()
-                            } else {
-                                null
-                            },
+                        cacheThumb = cacheThumb,
                         fileName = fileName,
                         fillSVG = it.fillFile.first(),
                         strokeSVG = it.strokeFile,
+                        lastModifiedCache = cacheThumb?.toUri()?.toFile()?.lastModified() ?: 0L,
+                        category = PaintingCategory.entries.find { category -> category.categoryName.equals(it.category, true) },
                     )
                 }
             _dataColorBook.value = data
@@ -66,10 +61,13 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun updateCategory(mContext: Context, cate: PaintingCategory){
-        currentSelectCategory = cate
-        loadColorBookData(mContext)
-    }
+//    fun updateCategory(
+//        mContext: Context,
+//        cate: PaintingCategory,
+//    ) {
+//        currentSelectCategory = cate
+//        loadColorBookData(mContext)
+//    }
 
     private suspend fun checkFileExistCache(
         mContext: Context,
