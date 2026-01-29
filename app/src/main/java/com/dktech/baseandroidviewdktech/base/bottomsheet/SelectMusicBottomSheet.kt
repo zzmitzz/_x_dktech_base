@@ -30,6 +30,7 @@ import java.io.File
 class SelectMusicBottomSheet(
     private val currentSelectedMusic: MusicItem? = null,
     private val onMusicSelected: ((MusicItem?) -> Unit)? = null,
+    private val playPauseSelectedMusic: ((Boolean) -> Unit)? = null,
 ) : BottomSheetDialogFragment() {
     companion object {
         var lastIsOnlineTab: Boolean = true
@@ -181,8 +182,10 @@ class SelectMusicBottomSheet(
         if (previewPlayingItem == musicItem && previewPlayer != null) {
             previewPlayer?.let { player ->
                 if (player.isPlaying) {
+                    playPauseSelectedMusic?.invoke(true)
                     player.pause()
                 } else {
+                    playPauseSelectedMusic?.invoke(false)
                     player.start()
                 }
             }
@@ -194,12 +197,14 @@ class SelectMusicBottomSheet(
         previewPlayer?.release()
         previewPlayer = null
 
+        playPauseSelectedMusic?.invoke(false)
         try {
             previewPlayer =
                 if (musicItem.resourceId != null) {
                     // Nhạc từ raw (tab Online hiện tại dùng localMusicList)
                     MediaPlayer.create(requireContext(), musicItem.resourceId!!).apply {
                         setOnCompletionListener {
+                            playPauseSelectedMusic?.invoke(true)
                             previewPlayingItem = null
                             musicAdapter?.notifyDataSetChanged()
                         }
@@ -215,6 +220,7 @@ class SelectMusicBottomSheet(
                                 musicAdapter?.notifyDataSetChanged()
                             }
                             setOnCompletionListener {
+                                playPauseSelectedMusic?.invoke(true)
                                 previewPlayingItem = null
                                 musicAdapter?.notifyDataSetChanged()
                                 release()

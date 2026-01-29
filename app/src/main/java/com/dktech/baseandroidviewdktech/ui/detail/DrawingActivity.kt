@@ -209,9 +209,16 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
             val bottomSheet =
                 SelectMusicBottomSheet(
                     currentSelectedMusic = selectedMusic,
-                ) { musicItem ->
-                    selectedMusic = musicItem
-                    playSelectedMusic(musicItem)
+                    onMusicSelected = { musicItem ->
+                        selectedMusic = musicItem
+                        playSelectedMusic(musicItem)
+                    },
+                ) {
+                    if (it) {
+                        musicPlayer?.start()
+                    } else {
+                        musicPlayer?.pause()
+                    }
                 }
             bottomSheet.show(supportFragmentManager, "SelectMusicBottomSheet")
         }
@@ -228,7 +235,7 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
         try {
             musicPlayer =
                 if (musicItem.resourceId != null) {
-                    MediaPlayer.create(this, musicItem.resourceId!!).apply {
+                    MediaPlayer.create(this, musicItem.resourceId).apply {
                         isLooping = true
                         setOnCompletionListener {
                             release()
@@ -257,13 +264,13 @@ class DrawingActivity : BaseActivity<ActivityDrawingBinding>() {
 
     override fun onStop() {
         super.onStop()
-        binding.drawview.removeListenerCallback()
         musicPlayer?.pause()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         musicPlayer?.release()
+        binding.drawview.removeListenerCallback()
         musicPlayer = null
     }
 
