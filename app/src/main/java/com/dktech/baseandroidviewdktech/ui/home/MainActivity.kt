@@ -6,13 +6,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
-import com.dktech.baseandroidviewdktech.MainViewModel
+import com.dktech.baseandroidviewdktech.ui.home.MainViewModel
 import com.dktech.baseandroidviewdktech.R
+import com.dktech.baseandroidviewdktech.base.BaseActivity
 import com.dktech.baseandroidviewdktech.base.BaseActivityVM
 import com.dktech.baseandroidviewdktech.base.ViewModelFactory
 import com.dktech.baseandroidviewdktech.databinding.ActivityMainBinding
 
-class MainActivity : BaseActivityVM<MainViewModel, ActivityMainBinding>() {
+class MainActivity : BaseActivity<ActivityMainBinding>() {
     override val onBackPressedCallback: OnBackPressedCallback
         get() = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -31,11 +32,6 @@ class MainActivity : BaseActivityVM<MainViewModel, ActivityMainBinding>() {
         }
 
     }
-
-    override fun initViewModel() {
-        viewModel = ViewModelProvider(this, ViewModelFactory())[MainViewModel::class.java]
-    }
-
     override fun getViewBinding(): ActivityMainBinding {
         return ActivityMainBinding.inflate(layoutInflater)
     }
